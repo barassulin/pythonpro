@@ -2,45 +2,38 @@
 """
 shapes - by Bar Assulin
 Date: 13/9/24
-ADMINS
 """
 
-# ADMINS
-"""
-shapes - by Bar Assulin
-Date: 13/9/24
-"""
-
-"""
-author - cyber
-date   - 29/11/17
-socket client
-"""
-import socket
-import struct
-
+import socketio
 SERVER_IP = '127.0.0.1'
-SERVER_PORT = 20003
-MESSAGE = 'hi'
-HEADER_LEN = 2
-LEN_SIGN = 'H'
+SERVER_PORT = 20004
+# Create a Socket.IO client
+sio = socketio.Client()
 
+# Event: when connected
+@sio.event
+def connect():
+    print("✅ Connected to the server")
+    sio.emit("message", "Hello from Python client!")
 
-def main():
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+# Event: response from server
+@sio.event
+def response(data):
+    print("📥 Response from server:", data)
 
-    client_socket.connect((SERVER_IP, SERVER_PORT))
+# Event: generic message
+@sio.event
+def message(data):
+    print("📨 Message received:", data)
 
-    msg = client_socket.recv(1024)
-    print(msg.decode())
-    client_socket.send(b"yay")
+# Event: when disconnected
+@sio.event
+def disconnect():
+    print("❌ Disconnected from server")
 
-    while True:
-        pass
-
-    client_socket.close()
-
-
-if __name__ == '__main__':
-    main()
-
+# Connect to the Socket.IO server
+try:
+    sio.connect(f"http://{SERVER_IP}:{SERVER_PORT}")
+    sio.wait()
+except Exception as e:
+    print("⚠️ Connection failed:", e)
