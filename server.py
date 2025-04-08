@@ -29,6 +29,7 @@ app = aiohttp.web.Application()
 # Attach the Socket.IO server to the aiohttp app
 sio.attach(app)
 
+
 # Define event handlers for Socket.IO
 @sio.event
 async def connect(sid, environ):
