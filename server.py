@@ -79,12 +79,17 @@ def start_server():
     clients_socket.listen(LISTEN_SIZE)
     print(f"Client listener on {CLIENTS_PORT}")
     """
-    aiohttp.web.run_app(app, host=SERVER_IP, port=CLIENTS_PORT)
     #sio.start_background_task(app.run, host=SERVER_IP, port=CLIENTS_PORT)
     # Accept connections on both sockets in separate threads
+
+
+
     server_thread = threading.Thread(target=accept_connections, args=(server_socket,))
     server_thread.daemon = True  # Allow threads to exit when the main program exits
     server_thread.start()
+    aiohttp.web.run_app(app, host=SERVER_IP, port=CLIENTS_PORT)
+
+
     """
     client_thread = threading.Thread(target=accept_connections, args=(clients_socket,))
     client_thread.daemon = True  # Allow threads to exit when the main program exits
