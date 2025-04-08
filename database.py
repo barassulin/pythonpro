@@ -1,10 +1,10 @@
 
 class Database:
     def __init__(self, host, user, password, database):
-        self.host = host,
-        self.user = user,
-        self.password = password,
-        self.database = database,
+        self.host = host
+        self.user = user
+        self.password = password
+        self.database = database
 
     def create_cursor(self):
         return self.cursor()
