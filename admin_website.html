@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Panel - Shapes</title>
+    <style>
+        body { font-family: Arial; margin: 30px; background-color: #f4f4f4; }
+        .panel { background: white; padding: 20px; border-radius: 8px; width: 400px; margin: auto; }
+        input, button { display: block; margin: 10px 0; padding: 8px; width: 100%; }
+    </style>
+</head>
+<body>
+    <div class="panel">
+        <h2>Admin Login</h2>
+        <input id="username" placeholder="Username">
+        <input id="password" type="password" placeholder="Password">
+        <button onclick="login()">Login</button>
+
+        <div id="admin-controls" style="display:none;">
+            <h3>App Management</h3>
+            <input id="app-name" placeholder="App Name">
+            <button onclick="addApp()">Add App</button>
+            <button onclick="removeApp()">Remove App</button>
+
+            <h3>Connected Devices</h3>
+            <button onclick="getConnected()">Refresh Devices</button>
+            <ul id="devices-list"></ul>
+        </div>
+    </div>
+
+    <script>
+        async function login() {
+            const name = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            const res = await fetch('/login', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ name, password })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('admin-controls').style.display = 'block';
+            } else {
+                alert("Login failed");
+            }
+        }
+
+        async function addApp() {
+            const app = document.getElementById('app-name').value;
+            await fetch('/add', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ app })
+            });
+        }
+
+        async function removeApp() {
+            const app = document.getElementById('app-name').value;
+            await fetch('/remove', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ app })
+            });
+        }
+
+        async function getConnected() {
+            const res = await fetch('/devices');
+            const data = await res.json();
+            const ul = document.getElementById('devices-list');
+            ul.innerHTML = '';
+            data.devices.forEach(d => {
+                const li = document.createElement('li');
+                li.innerText = d;
+                ul.appendChild(li);
+            });
+        }
+    </script>
+</body>
+</html>

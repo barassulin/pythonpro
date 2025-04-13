@@ -19,7 +19,7 @@ import socketio
 import socketio
 import aiohttp
 import asyncio
-
+import protocol
 # Create a new Socket.IO server
 sio = socketio.AsyncServer()
 
@@ -33,17 +33,22 @@ sio.attach(app)
 # Define event handlers for Socket.IO
 @sio.event
 async def connect(sid, environ):
-    print(f"Client {sid} connected!")
-    await sio.emit("response", {"message": "Hello from the server!"}, to=sid)
+    print(f"{sid} connected")
+    await sio.emit("messageFromServer", "phone", to=sid)
 
 @sio.event
-async def message(sid, data):
-    print(f"Message from {sid}: {data}")
-    await sio.send(sid, "Message received!")
+async def new_message(sid, data):
+    print(f"Got: {data}")
+    # dummy check
+    if data.lower() == "chrome":
+        await sio.emit("response", "true", to=sid)
+    else:
+        await sio.emit("response", "false", to=sid)
 
 @sio.event
 async def disconnect(sid):
-    print(f"Client {sid} disconnected!")
+    print(f"{sid} disconnected")
+
 
 def handle_client(client_socket, client_address, socket):
     """Handles communication with the client."""
