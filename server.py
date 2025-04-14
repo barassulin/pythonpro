@@ -8,18 +8,20 @@
 # port for admins and diff port for clients
 #
 import socket
-SERVER_IP = '0.0.0.0'
-SERVER_PORT = 20003
-CLIENTS_PORT = 20004
-LISTEN_SIZE = 1
-
+import database
 import socket
 import threading
-import socketio
 import socketio
 import aiohttp
 import asyncio
 import protocol
+
+SERVER_IP = '0.0.0.0'
+SERVER_PORT = 20003
+CLIENTS_PORT = 20004
+LISTEN_SIZE = 1
+DB = database.database()
+
 # Create a new Socket.IO server
 sio = socketio.AsyncServer()
 
@@ -29,6 +31,40 @@ app = aiohttp.web.Application()
 # Attach the Socket.IO server to the aiohttp app
 sio.attach(app)
 
+
+def add_to_db(cursor, table_name, values):
+    # check port
+    DB.add_to_db(cursor, table_name, values)
+
+
+def remove_from_db(cursor, table_name, condition):
+    # check port
+    DB.remove_from_db(cursor, table_name, condition)
+
+
+def read_from_db(cursor, table_name, rows):
+    # check port
+    DB.read_from_db(cursor, table_name, rows)
+
+
+def identification(cursor, name, password):
+    passi = DB.read_from_db(cursor, 'clients', f'password WHERE name = {name}')
+    # can break with password that continues the line
+    if password == passi:
+        return True
+    return False
+
+def recv(client_socket):
+    msg = protocol.recv_protocol(client_socket)
+    return msg
+
+
+def send(client_socket, msg):
+    return protocol.send_protocol(msg, client_socket)
+
+@sio.event
+async def update(sid, list):
+    await sio.emit("update", list, to=sid)
 
 # Define event handlers for Socket.IO
 @sio.event
@@ -52,8 +88,9 @@ async def disconnect(sid):
 
 def handle_client(client_socket, client_address, socket):
     """Handles communication with the client."""
-    print(f"Connection established with {client_address} on {socket}")
-    client_socket.send(b"Hello from the server!")
+    # my main
+    # print(f"Connection established with {client_address} on {socket}")
+    # client_socket.send(b"Hello from the server!")
     msg = client_socket.recv(1024)
     print(msg.decode())
     while True:

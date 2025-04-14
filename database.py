@@ -34,3 +34,4 @@ class Database:
         except Exception as e:
             # log
             return False
+
