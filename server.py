@@ -8,6 +8,7 @@
 # port for admins and diff port for clients
 #
 import socket
+import time
 import database
 import socket
 import threading
@@ -56,8 +57,15 @@ def get_list(cursor):
     # check port
     return DB.read_from_db(cursor, 'APPS', 'name')
 
-def identification(cursor, name, password):
+def identification_for_clients(cursor, name, password):
     passi = DB.read_from_db(cursor, 'clients', f'password WHERE name = {name}')
+    # can break with password that continues the line
+    if password == passi:
+        return True
+    return False
+
+def identification_for_admins(cursor, name, password):
+    passi = DB.read_from_db(cursor, 'admins', f'password WHERE name = {name}')
     # can break with password that continues the line
     if password == passi:
         return True
@@ -81,17 +89,30 @@ async def update(sid, list):
 @sio.event
 async def connect(sid, environ):
     print(f"{sid} connected")
-    # await sio.emit("messageFromServer", "phone", to=sid)
-"""
+    time.sleep(2)
+    await update(sid, "chrome")
+
+
 @sio.event
-async def new_message(sid, data):
+async def identify(sid, data):
     print(f"Got: {data}")
     # dummy check
-    if data.lower() == "chrome":
-        await sio.emit("response", "true", to=sid)
+    # data protocol with ' '
+    # cursor = DB.create_cursor()
+    name = data.lower().split()[0]
+    passi = data.lower().split()[1]
+    if name == 'name' and passi == 'pass':
+        print("tr")
     else:
-        await sio.emit("response", "false", to=sid)
-"""
+        print("fl")
+    """
+    if not identification_for_clients(cursor, name, passi):
+        disconnect(sid)
+    """
+    # else:
+    #     await sio.emit("response", "false", to=sid)
+
+
 
 
 @sio.event
@@ -135,7 +156,7 @@ def start_server():
     clients_socket.listen(LISTEN_SIZE)
     print(f"Client listener on {CLIENTS_PORT}")
     """
-    #sio.start_background_task(app.run, host=SERVER_IP, port=CLIENTS_PORT)
+    # sio.start_background_task(app.run, host=SERVER_IP, port=CLIENTS_PORT)
     # Accept connections on both sockets in separate threads
 
 
