@@ -20,7 +20,7 @@ SERVER_IP = '0.0.0.0'
 SERVER_PORT = 20003
 CLIENTS_PORT = 20004
 LISTEN_SIZE = 1
-DB = database.database()
+DB = database.Database('k','j','h','h')
 
 # Create a new Socket.IO server
 sio = socketio.AsyncServer()
@@ -32,20 +32,29 @@ app = aiohttp.web.Application()
 sio.attach(app)
 
 
-def add_to_db(cursor, table_name, values):
-    # check port
-    DB.add_to_db(cursor, table_name, values)
+async def add_to_db(sid, cursor, table_name, values):
+    if DB.add_to_db(cursor, table_name, values):
+        apps_list = get_list(cursor)
+        await update(sid, apps_list)  # await because update is async
+        return True
+    return False
 
 
-def remove_from_db(cursor, table_name, condition):
-    # check port
-    DB.remove_from_db(cursor, table_name, condition)
+async def remove_from_db(sid, cursor, table_name, condition):
+    if DB.remove_from_db(cursor, table_name, condition):
+        apps_list = get_list(cursor)
+        await update(sid, apps_list)  # await because update is async
+        return True
+    return False
 
 
 def read_from_db(cursor, table_name, rows):
     # check port
     DB.read_from_db(cursor, table_name, rows)
 
+def get_list(cursor):
+    # check port
+    return DB.read_from_db(cursor, 'APPS', 'name')
 
 def identification(cursor, name, password):
     passi = DB.read_from_db(cursor, 'clients', f'password WHERE name = {name}')
@@ -62,16 +71,18 @@ def recv(client_socket):
 def send(client_socket, msg):
     return protocol.send_protocol(msg, client_socket)
 
+
 @sio.event
 async def update(sid, list):
     await sio.emit("update", list, to=sid)
+
 
 # Define event handlers for Socket.IO
 @sio.event
 async def connect(sid, environ):
     print(f"{sid} connected")
-    await sio.emit("messageFromServer", "phone", to=sid)
-
+    # await sio.emit("messageFromServer", "phone", to=sid)
+"""
 @sio.event
 async def new_message(sid, data):
     print(f"Got: {data}")
@@ -80,6 +91,8 @@ async def new_message(sid, data):
         await sio.emit("response", "true", to=sid)
     else:
         await sio.emit("response", "false", to=sid)
+"""
+
 
 @sio.event
 async def disconnect(sid):
