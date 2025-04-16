@@ -89,7 +89,7 @@ async def update(sid, list):
 @sio.event
 async def connect(sid, environ):
     print(f"{sid} connected")
-    time.sleep(2)
+    time.sleep(1)
     await update(sid, "chrome")
 
 
