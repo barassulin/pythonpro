@@ -1,79 +1,75 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Admin Panel - Shapes</title>
-    <style>
-        body { font-family: Arial; margin: 30px; background-color: #f4f4f4; }
-        .panel { background: white; padding: 20px; border-radius: 8px; width: 400px; margin: auto; }
-        input, button { display: block; margin: 10px 0; padding: 8px; width: 100%; }
-    </style>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+  <style>
+    body { font-family: Arial; }
+    #admin-panel { display: none; }
+  </style>
 </head>
 <body>
-    <div class="panel">
-        <h2>Admin Login</h2>
-        <input id="username" placeholder="Username">
-        <input id="password" type="password" placeholder="Password">
-        <button onclick="login()">Login</button>
+  <h1>Admin Panel</h1>
 
-        <div id="admin-controls" style="display:none;">
-            <h3>App Management</h3>
-            <input id="app-name" placeholder="App Name">
-            <button onclick="addApp()">Add App</button>
-            <button onclick="removeApp()">Remove App</button>
+  <div id="login">
+    <h2>Login</h2>
+    <input id="name" placeholder="Name"><br>
+    <input id="password" type="password" placeholder="Password"><br>
+    <button onclick="login()">Login</button>
+    <p id="error" style="color:red;"></p>
+  </div>
 
-            <h3>Connected Devices</h3>
-            <button onclick="getConnected()">Refresh Devices</button>
-            <ul id="devices-list"></ul>
-        </div>
-    </div>
+  <div id="admin-panel">
+    <h2>Welcome Admin</h2>
 
-    <script>
-        async function login() {
-            const name = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
+    <h3>Add App</h3>
+    <input id="add-app-name" placeholder="App name">
+    <button onclick="addApp()">Add</button>
 
-            const res = await fetch('/login', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ name, password })
-            });
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById('admin-controls').style.display = 'block';
-            } else {
-                alert("Login failed");
-            }
-        }
+    <h3>Remove App</h3>
+    <input id="remove-app-name" placeholder="App name">
+    <button onclick="removeApp()">Remove</button>
+  </div>
 
-        async function addApp() {
-            const app = document.getElementById('app-name').value;
-            await fetch('/add', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ app })
-            });
-        }
+  <script>
+    async function login() {
+      const name = document.getElementById('name').value;
+      const password = document.getElementById('password').value;
 
-        async function removeApp() {
-            const app = document.getElementById('app-name').value;
-            await fetch('/remove', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ app })
-            });
-        }
+      const res = await fetch('/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `action=identify&name=${name}&password=${password}`
+      });
 
-        async function getConnected() {
-            const res = await fetch('/devices');
-            const data = await res.json();
-            const ul = document.getElementById('devices-list');
-            ul.innerHTML = '';
-            data.devices.forEach(d => {
-                const li = document.createElement('li');
-                li.innerText = d;
-                ul.appendChild(li);
-            });
-        }
-    </script>
+      const data = await res.json();
+      if (data.status === "OK") {
+        document.getElementById('login').style.display = 'none';
+        document.getElementById('admin-panel').style.display = 'block';
+      } else {
+        document.getElementById('error').textContent = "Login failed.";
+      }
+    }
+
+    async function addApp() {
+      const appName = document.getElementById('add-app-name').value;
+      await fetch('/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `action=add&app_name=${appName}`
+      });
+      alert("App added!");
+    }
+
+    async function removeApp() {
+      const appName = document.getElementById('remove-app-name').value;
+      await fetch('/', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/x-www-form-urlencoded'},
+        body: `action=remove&app_name=${appName}`
+      });
+      alert("App removed!");
+    }
+  </script>
 </body>
 </html>

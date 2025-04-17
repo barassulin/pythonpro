@@ -133,7 +133,7 @@ async def identify(sid, data):
         print('tl')
     else:
         print("fl")
-        # disconnect?
+        await disconnect(sid)
     """
     if not identification_for_clients(cursor, name, passi):
         disconnect(sid)
