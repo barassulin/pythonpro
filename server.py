@@ -77,6 +77,7 @@ def check_workspace_clients(sid):
 
 
 def identification_for_clients(name, password, sid):
+    # to add the identifier to the db when connecting
     worked = False
     cursor = DB.create_cursor()
     passi = DB.read_from_db(cursor, f'clients WHERE name = {name}', 'password')
@@ -125,6 +126,7 @@ async def identify(sid, data):
     # dummy check
     # data protocol with ' '
     # cursor = DB.create_cursor()
+
     name = data.lower().split()[0]
     passi = data.lower().split()[1]
     ws_pass = data.lower().split()[2]
