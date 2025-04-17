@@ -21,7 +21,7 @@ SERVER_IP = '0.0.0.0'
 SERVER_PORT = 20003
 CLIENTS_PORT = 20004
 LISTEN_SIZE = 1
-DB = database.Database('k','j','h','h')
+DB = database.Database('127.0.0.1','root','Zaq1@wsx','bar')
 
 # Create a new Socket.IO server
 sio = socketio.AsyncServer()
@@ -33,43 +33,69 @@ app = aiohttp.web.Application()
 sio.attach(app)
 
 
-async def add_to_db(sid, cursor, table_name, values):
+async def add_to_db(sid, table_name, values):
+    worked = False
+    cursor = DB.create_cursor()
     if DB.add_to_db(cursor, table_name, values):
         apps_list = get_list(cursor)
         await update(sid, apps_list)  # await because update is async
-        return True
-    return False
+        worked = True
+    cursor.close()
+    return worked
 
 
-async def remove_from_db(sid, cursor, table_name, condition):
+async def remove_from_db(sid, table_name, condition):
+    worked = False
+    cursor = DB.create_cursor()
     if DB.remove_from_db(cursor, table_name, condition):
         apps_list = get_list(cursor)
         await update(sid, apps_list)  # await because update is async
-        return True
-    return False
+        worked = True
+    cursor.close()
+    return worked
 
 
-def read_from_db(cursor, table_name, rows):
+def read_from_db(table_name, rows):
     # check port
-    DB.read_from_db(cursor, table_name, rows)
+    cursor = DB.create_cursor()
+    answer = DB.read_from_db(cursor, table_name, rows)
+    cursor.close()
+    return answer
 
-def get_list(cursor):
+
+def get_list():
     # check port
-    return DB.read_from_db(cursor, 'APPS', 'name')
+    cursor = DB.create_cursor()
+    msg = DB.read_from_db(cursor, 'APPS', 'name')
+    cursor.close()
+    return msg
 
-def identification_for_clients(cursor, name, password):
-    passi = DB.read_from_db(cursor, 'clients', f'password WHERE name = {name}')
-    # can break with password that continues the line
-    if password == passi:
-        return True
-    return False
 
-def identification_for_admins(cursor, name, password):
+def check_workspace_clients(sid):
+    id_ws = read_from_db(f'clients where sid = {sid}', 'workspace_id')
+    return id_ws[0][0]
+
+
+def identification_for_clients(name, password, sid):
+    worked = False
+    cursor = DB.create_cursor()
+    passi = DB.read_from_db(cursor, f'clients WHERE name = {name}', 'password')
+    if password == passi[0]:
+        worked = DB.update_val_in_db(cursor, 'clients', f'sid = {sid}', f'name = {name} and '
+                                                                        f'password = {password}')
+    cursor.close()
+    return worked
+
+
+def identification_for_admins(name, password):
+    worked = False
+    cursor = DB.create_cursor()
     passi = DB.read_from_db(cursor, 'admins', f'password WHERE name = {name}')
-    # can break with password that continues the line
     if password == passi:
-        return True
-    return False
+        worked = True
+    cursor.close()
+    return worked
+
 
 def recv(client_socket):
     msg = protocol.recv_protocol(client_socket)
@@ -90,7 +116,7 @@ async def update(sid, list):
 async def connect(sid, environ):
     print(f"{sid} connected")
     time.sleep(1)
-    await update(sid, "chrome")
+    # await update(sid, "chrome")
 
 
 @sio.event
@@ -101,10 +127,13 @@ async def identify(sid, data):
     # cursor = DB.create_cursor()
     name = data.lower().split()[0]
     passi = data.lower().split()[1]
-    if name == 'name' and passi == 'pass':
-        print("tr")
+    ws_pass = data.lower().split()[2]
+    cursor = DB.create_cursor()
+    if DB.client_idedtify(cursor, name, passi, ws_pass):
+        print('tl')
     else:
         print("fl")
+        # disconnect?
     """
     if not identification_for_clients(cursor, name, passi):
         disconnect(sid)
@@ -178,6 +207,7 @@ def start_server():
 
 
 def main():
+    print(get_list())
     start_server()
 
 
