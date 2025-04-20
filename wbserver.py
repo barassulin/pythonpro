@@ -33,6 +33,7 @@ REDIRECTION_DICTIONARY = {"/moved": "/"}
 #LOG_FILE = LOG_DIR + '/server.log'
 #LOG_DIR = 'log'
 
+
 def get_file_data(file_name):
     """
     Get data from file
