@@ -1,8 +1,5 @@
-
+import threading
 import Admin
-
-#sock = Admin.connect()
-
 
 """
 HTTP Server Shell
@@ -28,7 +25,7 @@ PORT = 8080
 SOCKET_TIMEOUT = 2
 REDIRECTION_DICTIONARY = {"/moved": "/",
                           "/admin": "/",
-                          "/apps": DEFAULT_URL
+                          "/apps": "/"
                           }
 
 #LOG_FORMAT = '%(levelname)s | %(asctime)s | %(processName)s | %(message)s'
@@ -63,6 +60,7 @@ def handle_client_request(resource, client_socket):
     :param client_socket: a socket for the communication with the client
     :return: None
     """
+    # sock = Admin.connect()
     print("handling")
     if resource == '/':
         uri = DEFAULT_URL
@@ -104,9 +102,9 @@ def handle_client_request(resource, client_socket):
             elif file_type == "png":
                 http_header = f"HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: {leng}\r\n\r\n"
             else:
-                http_header = "HTTP/1.1 500 ERROR SERVER INTERNAL\r\nContent-Length: 0\r\n\r\n"
-                data = None
+                 data = None
             http_response = http_header.encode() + data
+        http_header = "HTTP/1.1 500 ERROR SERVER INTERNAL\r\nContent-Length: 0\r\n\r\n"
         print(http_response)
     client_socket.send(http_response)
 
@@ -175,7 +173,9 @@ def main():
             try:
                 print('New connection received')
                 client_socket.settimeout(SOCKET_TIMEOUT)
-                handle_client(client_socket)
+                server_thread = threading.Thread(target=handle_client, args=(client_socket,))
+                server_thread.daemon = True  # Allow threads to exit when the main program exits
+                server_thread.start()
             except socket.error as err:
                 logging.error("received socket error on client socket" + str(err))
                 print('received socket exception - ' + str(err))
