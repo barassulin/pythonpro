@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Details</title>
+  <style>
+    body {
+      background: #f2f5f9;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      margin: 0;
+    }
+
+    .card {
+      background: white;
+      padding: 2rem 3rem;
+      border-radius: 12px;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+      max-width: 500px;
+      width: 100%;
+    }
+
+    h2, h3 {
+      color: #333;
+    }
+
+    ul {
+      padding-left: 1.2rem;
+      margin-bottom: 1.5rem;
+    }
+
+    li {
+      margin-bottom: 0.5rem;
+      font-size: 1rem;
+      color: #555;
+    }
+
+    .not-found {
+      color: #c00;
+      font-weight: bold;
+    }
+
+    @media (max-width: 480px) {
+      .card {
+        padding: 1.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Details</h2>
+    <div id="details-output"></div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const number = params.get("number");
+
+    const data = {
+      111: { phones: ["111-111", "111-222"], addresses: ["1 First St", "2 Second St"] },
+      222: { phones: ["222-111"], addresses: ["3 Third St"] },
+      333: { phones: ["333-333", "333-444"], addresses: ["4 Fourth St"] },
+      444: { phones: ["444-111"], addresses: ["5 Fifth St"] },
+    };
+
+    const container = document.getElementById("details-output");
+
+    if (data[number]) {
+      let html = "<h3>Phones:</h3><ul>";
+      data[number].phones.forEach(p => {
+        html += `<li>${p}</li>`;
+      });
+      html += "</ul><h3>Addresses:</h3><ul>";
+      data[number].addresses.forEach(a => {
+        html += `<li>${a}</li>`;
+      });
+      html += "</ul>";
+      container.innerHTML = html;
+    } else {
+      container.innerHTML = `<p class="not-found">No data found for number: ${number}</p>`;
+    }
+  </script>
+</body>
+</html>

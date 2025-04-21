@@ -31,9 +31,9 @@ import logging
 import os
 
 # Constants
-WEB_ROOT = "C:/cyber/cyber4+/webroot"  # Adjust this to your web document root
-DEFAULT_URL = "/index.html"
-UPLOAD_FOLDER = "C:/cyber/cyber4+/upload/"
+WEB_ROOT = "C:/serveriii/webroot"  # Adjust this to your web document root
+DEFAULT_URL = "/admin_website.html"
+UPLOAD_FOLDER = "C:/serveriii/upload/"
 
 QUEUE_LEN = 1
 IP = '0.0.0.0'
@@ -52,7 +52,6 @@ LOG_FORMAT = '%(levelname)s | %(asctime)s | %(processName)s | %(message)s'
 LOG_LEVEL = logging.DEBUG
 LOG_DIR = 'log'
 LOG_FILE = LOG_DIR + '/server.log'
-
 
 # dicts:
 REDIRECTION_DICTIONARY = {"/moved": "/"}
@@ -226,7 +225,6 @@ FUNC_DICTIONARY = {"/calculate-next": calc_next,
                    "/forbidden": forbidden,
                    "/error": error
                    }
-
 
 # funcs:
 def get_file_data(file_name):

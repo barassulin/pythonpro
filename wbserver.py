@@ -19,14 +19,17 @@ import re
 import logging
 
 # Constants
-WEB_ROOT = "C:/cyber/cyber4n/webroot"  # Adjust this to your web document root
+WEB_ROOT = "C:/serveriii/webroot"  # Adjust this to your web document root
 DEFAULT_URL = "/admin_website.html"
 
 QUEUE_LEN = 1
 IP = '0.0.0.0'
 PORT = 8080
 SOCKET_TIMEOUT = 2
-REDIRECTION_DICTIONARY = {"/moved": "/"}
+REDIRECTION_DICTIONARY = {"/moved": "/",
+                          "/admin": "/",
+                          "/apps": DEFAULT_URL
+                          }
 
 #LOG_FORMAT = '%(levelname)s | %(asctime)s | %(processName)s | %(message)s'
 #LOG_LEVEL = logging.DEBUG
@@ -42,7 +45,8 @@ def get_file_data(file_name):
     """
     data = None
     try:
-        file_path =file_name + WEB_ROOT
+        file_path = WEB_ROOT + file_name
+        print(file_path)
         with open(file_path, "rb") as file:
             data = file.read()
     except Exception as err:
@@ -59,10 +63,11 @@ def handle_client_request(resource, client_socket):
     :param client_socket: a socket for the communication with the client
     :return: None
     """
+    print("handling")
     if resource == '/':
         uri = DEFAULT_URL
     else:
-        uri = resource
+        uri = DEFAULT_URL
     http_response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
     http_response = http_response.encode()
     if uri in REDIRECTION_DICTIONARY:
@@ -78,8 +83,8 @@ def handle_client_request(resource, client_socket):
         file_type = uri.split(".")[-1]
         if (file_type == "html" or file_type == "jpg" or file_type == "gif" or file_type == "css" or file_type == "js"
                 or file_type == "txt" or file_type == "ico" or file_type == "png"):
-            data = get_file_data(uri)
-
+            data = get_file_data(uri) # DEFAULT_URL.encode()
+            print(data)
             leng = len(data)
             if file_type == "html":
                 http_header = f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {leng}\r\n\r\n"
@@ -102,6 +107,7 @@ def handle_client_request(resource, client_socket):
                 http_header = "HTTP/1.1 500 ERROR SERVER INTERNAL\r\nContent-Length: 0\r\n\r\n"
                 data = None
             http_response = http_header.encode() + data
+        print(http_response)
     client_socket.send(http_response)
 
 
@@ -114,6 +120,7 @@ def validate_http_request(request):
     the requested resource )
     """
     pattern = r"^GET (.*) HTTP/1.1"
+    print(pattern)
     mch = re.search(pattern, request)
     if mch:
         req_url = mch.group(1)
@@ -134,14 +141,14 @@ def handle_client(client_socket):
             print("ok1")
             client_request = client_socket.recv(1024).decode()
             print('ok2')
-            # while '\r\n\r\n' not in client_request:
-            #    client_request = client_request + client_socket.recv(1).decode()
-            # logging.debug("getting client request " + client_request)
-            #valid_http, resource = validate_http_request(client_request)
+            while '\r\n\r\n' not in client_request:
+                client_request = client_request + client_socket.recv(1).decode()
+            logging.debug("getting client request " + client_request)
+            valid_http, resource = validate_http_request(client_request)
             valid_http = True
             if valid_http:
                 print('Got a valid HTTP request')
-                #handle_client_request(resource, client_socket)
+                handle_client_request(resource, client_socket)
             else:
                 http_header = "HTTP/1.1 400 Request Bad\r\n\r\n"
                 client_socket.send(http_header.encode())
@@ -149,7 +156,8 @@ def handle_client(client_socket):
                 print('Error: Not a valid HTTP request')
                 break
         except Exception as err:  # Catch any unexpected errors
-            logging.error("Error handling client request: " + str(err))
+            #logging.error("Error handling client request: " + str(err))
+            print(err)
             break  # Close the connection to prevent further issues
 
     print('Closing connection')
