@@ -20,7 +20,7 @@ import logging
 
 # Constants
 WEB_ROOT = "C:/serveriii/webroot"  # Adjust this to your web document root
-DEFAULT_URL = "/admin_website.html"
+DEFAULT_URL = "/index.html"
 
 QUEUE_LEN = 1
 IP = '0.0.0.0'
