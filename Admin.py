@@ -67,6 +67,12 @@ def identification(client_socket, name, password):
     send(client_socket, f"identification{SIGN}{name}{SIGN}{password}")
 
 
+def signin(client_socket, name, password):
+    # check the info i recv
+    add_to_db("clients", )
+    send(client_socket, f"identification{SIGN}{name}{SIGN}{password}")
+
+
 def main():
     pass
 

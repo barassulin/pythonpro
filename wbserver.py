@@ -1,5 +1,8 @@
-import threading
+
 import Admin
+
+#sock = Admin.connect()
+
 
 """
 HTTP Server Shell
@@ -14,6 +17,8 @@ Filled by: Bar Assulin
 import socket
 import re
 import logging
+import protocol
+
 
 # Constants
 WEB_ROOT = "C:/serveriii/webroot"  # Adjust this to your web document root
@@ -23,10 +28,19 @@ QUEUE_LEN = 1
 IP = '0.0.0.0'
 PORT = 8080
 SOCKET_TIMEOUT = 2
-REDIRECTION_DICTIONARY = {"/moved": "/",
+REDIRECTION_DICTIONARY = {"/moved": "/"
+                          """
                           "/admin": "/",
                           "/apps": "/"
+                          """
                           }
+
+users = {}  # username: password
+user_data = {  # fake user data
+    "john": [111, 222],
+    "jane": [333, 444]
+}
+
 
 #LOG_FORMAT = '%(levelname)s | %(asctime)s | %(processName)s | %(message)s'
 #LOG_LEVEL = logging.DEBUG
@@ -52,7 +66,28 @@ def get_file_data(file_name):
         return data
 
 
-def handle_client_request(resource, client_socket):
+def db_connection(func, args):
+    res = "False"
+    try:
+        my_socket = Admin.connect()
+        if func == "up":
+            # add to db the values
+            print("up")
+        elif func == "in":
+            Admin.identification(my_socket, args[0], args[1])
+            res = Admin.recv(my_socket)
+            print("in")
+        else:
+            Admin.send(my_socket, f"{func}+{Admin.SIGN}+{args}")
+            res = Admin.recv()
+    except Exception as err:
+        print(err)
+    finally:
+        Admin.disconnect(my_socket)
+        return res
+
+
+def handle_client_request(resource, client_socket, req):
     """
     Check the required resource, generate proper HTTP response and send
     to client
@@ -60,10 +95,26 @@ def handle_client_request(resource, client_socket):
     :param client_socket: a socket for the communication with the client
     :return: None
     """
-    # sock = Admin.connect()
     print("handling")
+    print(resource)
     if resource == '/':
         uri = DEFAULT_URL
+    elif resource == "/login":
+        b, name, passw, func = find_name_pass(req)
+        res = db_connection(func, [name, passw])
+        if b == True and func == "in" and res:
+            # check in database
+            uri = "/home.html"
+        elif b == True and func == "up" and res:
+            # enter in database
+            print("insert db")
+            uri = "/home.html"
+        else:
+            uri = "/forbidden"
+        print("home")
+    elif resource == "/details":
+        uri = "/details.html"
+        print("p")
     else:
         uri = DEFAULT_URL
     http_response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
@@ -77,12 +128,18 @@ def handle_client_request(resource, client_socket):
     elif uri == "/error":
         http_response = "HTTP/1.1 500 ERROR SERVER INTERNAL\r\nContent-Length: 0\r\n\r\n"
         http_response = http_response.encode()
+
     else:
+        print("uri", uri)
         file_type = uri.split(".")[-1]
+
         if (file_type == "html" or file_type == "jpg" or file_type == "gif" or file_type == "css" or file_type == "js"
                 or file_type == "txt" or file_type == "ico" or file_type == "png"):
-            data = get_file_data(uri) # DEFAULT_URL.encode()
-            print(data)
+            try:
+                data = get_file_data(uri) # DEFAULT_URL.encode()
+                print("data: ", data)
+            except Exception as err:
+                print(err)
             leng = len(data)
             if file_type == "html":
                 http_header = f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {leng}\r\n\r\n"
@@ -102,11 +159,23 @@ def handle_client_request(resource, client_socket):
             elif file_type == "png":
                 http_header = f"HTTP/1.1 200 OK\r\nContent-Type: image/png\r\nContent-Length: {leng}\r\n\r\n"
             else:
-                 data = None
+                data = None
+                http_header = "HTTP/1.1 500 ERROR SERVER INTERNAL\r\nContent-Length: 0\r\n\r\n"
             http_response = http_header.encode() + data
-        http_header = "HTTP/1.1 500 ERROR SERVER INTERNAL\r\nContent-Length: 0\r\n\r\n"
         print(http_response)
     client_socket.send(http_response)
+
+
+def find_name_pass(request):
+    # username=a&password=1234&action=signin
+
+    pattern = r"username=(.*)&password=(.*)&action=sign(.*)"
+    m = re.search(pattern, request)
+    if m:
+        user, pwd, extra = m.groups()
+        return True, user, pwd, extra
+
+    return False, None, None, None
 
 
 def validate_http_request(request):
@@ -117,12 +186,17 @@ def validate_http_request(request):
     :return: a tuple of (True/False - depending if the request is valid,
     the requested resource )
     """
-    pattern = r"^GET (.*) HTTP/1.1"
-    print(pattern)
-    mch = re.search(pattern, request)
-    if mch:
-        req_url = mch.group(1)
-        return True, req_url
+    patterns = [
+        r"^GET (.*) HTTP/1\.\d",
+        r"^POST (.*) HTTP/1\.\d"
+    ]
+    for pattern in patterns:
+        match = re.search(pattern, request)
+        if match:
+            req_url = match.group(1)
+            print("requrl: ", req_url)
+            return True, req_url
+
     return False, None
 
 
@@ -138,15 +212,18 @@ def handle_client(client_socket):
         try:
             print("ok1")
             client_request = client_socket.recv(1024).decode()
-            print('ok2')
             while '\r\n\r\n' not in client_request:
                 client_request = client_request + client_socket.recv(1).decode()
             logging.debug("getting client request " + client_request)
+            print(client_request)
             valid_http, resource = validate_http_request(client_request)
+            print("r: ", resource)
             valid_http = True
             if valid_http:
+                print(resource)
                 print('Got a valid HTTP request')
-                handle_client_request(resource, client_socket)
+                print("start     ", client_request, "    end")
+                handle_client_request(resource, client_socket, client_request)
             else:
                 http_header = "HTTP/1.1 400 Request Bad\r\n\r\n"
                 client_socket.send(http_header.encode())
@@ -173,9 +250,7 @@ def main():
             try:
                 print('New connection received')
                 client_socket.settimeout(SOCKET_TIMEOUT)
-                server_thread = threading.Thread(target=handle_client, args=(client_socket,))
-                server_thread.daemon = True  # Allow threads to exit when the main program exits
-                server_thread.start()
+                handle_client(client_socket)
             except socket.error as err:
                 logging.error("received socket error on client socket" + str(err))
                 print('received socket exception - ' + str(err))
