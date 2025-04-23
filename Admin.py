@@ -67,10 +67,9 @@ def identification(client_socket, name, password):
     send(client_socket, f"identification{SIGN}{name}{SIGN}{password}".encode())
 
 
-def signin(client_socket, name, password):
+def signup(client_socket, name, password):
     # check the info i recv
-    add_to_db("clients", )
-    send(client_socket, f"identification{SIGN}{name}{SIGN}{password}")
+    send(client_socket, f"signup{SIGN}{name}{SIGN}{password}")
 
 
 def main():

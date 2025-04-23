@@ -67,6 +67,8 @@ def db_connection(func, args):
         my_socket = Admin.connect()
         if func == "up":
             # add to db the values
+            Admin.signup(args[0], args[1])
+            res = Admin.recv(my_socket)
             print("up")
         elif func == "in":
             Admin.identification(my_socket, args[0], args[1])

@@ -22,7 +22,6 @@ SERVER_PORT = 20003
 CLIENTS_PORT = 20004
 LISTEN_SIZE = 1
 DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
-
 # Create a new Socket.IO server
 sio = socketio.AsyncServer()
 
@@ -33,7 +32,7 @@ app = aiohttp.web.Application()
 sio.attach(app)
 
 
-async def add_to_db(sid, table_name, values):
+async def add_app_to_db(sid, table_name, values):
     worked = False
     cursor = DB.create_cursor()
     if DB.add_to_db(cursor, table_name, values):
@@ -80,37 +79,49 @@ def identification_for_clients(name, password, sid):
     # to add the identifier to the db when connecting
     worked = False
     cursor = DB.create_cursor()
-    passi = DB.read_from_db(cursor, f'clients WHERE name = {name}', 'password')
+    passi = DB.read_from_db(cursor, f"clients WHERE name = {name}", 'c_password')
     if password == passi[0]:
         worked = DB.update_val_in_db(cursor, 'clients', f'sid = {sid}', f'name = {name} and '
-                                                                        f'password = {password}')
+                                                                        f'a_password = {password}')
     cursor.close()
     return worked
 
 
 def identification_for_admins(name, password):
+    name = str(name)
     worked = None
     cursor = DB.create_cursor()
-    passi = DB.read_from_db(cursor, 'admins', f'password WHERE name = {name}')
+    passi = DB.read_from_db(cursor, f'admins WHERE name = \'{name}\'', 'a_password')
     if password == passi:
         worked = get_list("WORKSPACES", name) # of workspaces
     cursor.close()
+    print("worked")
     return worked
 
 
-FUNC_DICTIONARY = {"identification": identification_for_admins,
-                   "signup": add_to_db,
-                   "add_app": add_to_db,
+def admin_sign_up(name, password):
+    cursor = DB.create_cursor()
+    return DB.add_to_db(cursor, "admins(name,a_password)", f"{name}, {password}")
+
+
+FUNC_DICT = {"identification": identification_for_admins,
+                   "signup": admin_sign_up,
+                   "add_app": add_app_to_db,
                    "remove_app": remove_from_db,
-                   "": forbidden,
-                   "/error": error
+                   "app_list": read_from_db,
+                   "clients_list": read_from_db
                    }
+
+
 def handling_req(req):
-    parts_req = req.split('!')
-    func = parts_req[0]
     ans = None
-    if func in FUNC_DICTIONARY:
-        ans = FUNC_DICTIONARY[func](parts_req[1], parts_req[2])
+    try:
+        parts_req = req.split('!')
+        func = parts_req[0]
+        if func in FUNC_DICT:
+            ans = FUNC_DICT[func](parts_req[1], parts_req[2])
+    except Exception as err:
+        print(err)
     return ans
 
 
@@ -174,6 +185,7 @@ def handle_client(client_socket, client_address, socket):
     msg = protocol.recv_protocol(client_socket)
     print(msg)
     ans = handling_req(msg)
+    protocol.send_protocol(ans,client_socket)
     # while True:
     #    pass
     client_socket.close()

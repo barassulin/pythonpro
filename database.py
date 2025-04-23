@@ -38,6 +38,7 @@ class Database:
     def remove_from_db(self, cursor, table_name, condition):
         try:
             sql = f"DELETE FROM {table_name} WHERE ({condition})"
+
             cursor.execute(sql)
             self.connection.commit()
             return True
