@@ -35,12 +35,6 @@ REDIRECTION_DICTIONARY = {"/moved": "/"
                           """
                           }
 
-users = {}  # username: password
-user_data = {  # fake user data
-    "john": [111, 222],
-    "jane": [333, 444]
-}
-
 
 #LOG_FORMAT = '%(levelname)s | %(asctime)s | %(processName)s | %(message)s'
 #LOG_LEVEL = logging.DEBUG
@@ -68,6 +62,7 @@ def get_file_data(file_name):
 
 def db_connection(func, args):
     res = "False"
+    print(func)
     try:
         my_socket = Admin.connect()
         if func == "up":

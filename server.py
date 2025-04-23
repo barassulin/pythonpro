@@ -21,7 +21,7 @@ SERVER_IP = '0.0.0.0'
 SERVER_PORT = 20003
 CLIENTS_PORT = 20004
 LISTEN_SIZE = 1
-DB = database.Database('127.0.0.1','root','Zaq1@wsx','bar')
+DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
 
 # Create a new Socket.IO server
 sio = socketio.AsyncServer()
@@ -63,10 +63,10 @@ def read_from_db(table_name, rows):
     return answer
 
 
-def get_list():
+def get_list(of_what, id_admin):
     # check port
     cursor = DB.create_cursor()
-    msg = DB.read_from_db(cursor, 'APPS', 'name')
+    msg = DB.read_from_db(cursor, of_what + f" WHERE id={id_admin}", 'name')
     cursor.close()
     return msg
 
@@ -89,13 +89,29 @@ def identification_for_clients(name, password, sid):
 
 
 def identification_for_admins(name, password):
-    worked = False
+    worked = None
     cursor = DB.create_cursor()
     passi = DB.read_from_db(cursor, 'admins', f'password WHERE name = {name}')
     if password == passi:
-        worked = True
+        worked = get_list("WORKSPACES", name) # of workspaces
     cursor.close()
     return worked
+
+
+FUNC_DICTIONARY = {"identification": identification_for_admins,
+                   "signup": add_to_db,
+                   "add_app": add_to_db,
+                   "remove_app": remove_from_db,
+                   "": forbidden,
+                   "/error": error
+                   }
+def handling_req(req):
+    parts_req = req.split('!')
+    func = parts_req[0]
+    ans = None
+    if func in FUNC_DICTIONARY:
+        ans = FUNC_DICTIONARY[func](parts_req[1], parts_req[2])
+    return ans
 
 
 def recv(client_socket):
@@ -144,8 +160,6 @@ async def identify(sid, data):
     #     await sio.emit("response", "false", to=sid)
 
 
-
-
 @sio.event
 async def disconnect(sid):
     print(f"{sid} disconnected")
@@ -154,12 +168,14 @@ async def disconnect(sid):
 def handle_client(client_socket, client_address, socket):
     """Handles communication with the client."""
     # my main
-    # print(f"Connection established with {client_address} on {socket}")
+    print(f"Connection established with {client_address} on {socket}")
     # client_socket.send(b"Hello from the server!")
-    msg = client_socket.recv(1024)
-    print(msg.decode())
-    while True:
-        pass
+
+    msg = protocol.recv_protocol(client_socket)
+    print(msg)
+    ans = handling_req(msg)
+    # while True:
+    #    pass
     client_socket.close()
 
 
@@ -190,13 +206,10 @@ def start_server():
     # sio.start_background_task(app.run, host=SERVER_IP, port=CLIENTS_PORT)
     # Accept connections on both sockets in separate threads
 
-
-
     server_thread = threading.Thread(target=accept_connections, args=(server_socket,))
     server_thread.daemon = True  # Allow threads to exit when the main program exits
     server_thread.start()
     aiohttp.web.run_app(app, host=SERVER_IP, port=CLIENTS_PORT)
-
 
     """
     client_thread = threading.Thread(target=accept_connections, args=(clients_socket,))
@@ -209,7 +222,7 @@ def start_server():
 
 
 def main():
-    print(get_list())
+    print(get_list("APPS", "1"))
     start_server()
 
 

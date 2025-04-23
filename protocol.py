@@ -5,7 +5,7 @@ Author: Bar Assulin
 Date: 11.12.2023
 Description: server.py for cyber2.7
 """
-END_SIGN = "!"
+END_SIGN = "#"
 
 
 def send_protocol(message, socket):
@@ -37,7 +37,7 @@ def recv_protocol(socket):
     :param socket: the socket
     :return: the string
     """
-    message = socket.recv(1)
+    message = socket.recv(1).decode()
     if message is not None:
         message_length = len(END_SIGN.encode())
         message = message + socket.recv(message_length - len(message)).decode()
