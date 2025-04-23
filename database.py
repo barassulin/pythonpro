@@ -1,3 +1,5 @@
+import re
+
 import pymysql
 
 class Database:
@@ -33,6 +35,9 @@ class Database:
         sql = f"SELECT {rows} FROM {table_name}"
         cursor.execute(sql)
         myresult = cursor.fetchall()
+        print("pass ", myresult)
+        # myresult = re.split(r'[;,\s]+:', myresult)
+        myresult = myresult[0][0]
         return myresult
 
     def remove_from_db(self, cursor, table_name, condition):

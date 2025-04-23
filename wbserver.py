@@ -69,10 +69,12 @@ def db_connection(func, args):
             # add to db the values
             Admin.signup(my_socket, args[0], args[1])
             res = Admin.recv(my_socket)
+            print(res)
             print("up")
         elif func == "in":
             Admin.identification(my_socket, args[0], args[1])
             res = Admin.recv(my_socket)
+            print(res)
             print("in")
         else:
             Admin.send(my_socket, f"{func}+{Admin.SIGN}+{args}")
@@ -100,7 +102,8 @@ def handle_client_request(resource, client_socket, req):
     elif resource == "/login":
         b, name, passw, func = find_name_pass(req)
         res = db_connection(func, [name, passw])
-        if b == True and func == "in" and res is not "None":
+        print("res", res)
+        if b == True and func == "in" and res == 'True':
             # check in database
             uri = "/home.html"
             print("did got in")
@@ -110,7 +113,6 @@ def handle_client_request(resource, client_socket, req):
             uri = "/home.html"
         else:
             uri = "/forbidden"
-        print("home")
     elif resource == "/details":
         uri = "/details.html"
         print("p")

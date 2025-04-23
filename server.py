@@ -89,12 +89,13 @@ def identification_for_clients(name, password, sid):
 
 def identification_for_admins(name, password):
     name = str(name)
-    worked = None
+    worked = 'False'
     cursor = DB.create_cursor()
-    passi = DB.read_from_db(cursor, f'admins WHERE name = \'{name}\'', 'a_password')
+    passi = DB.read_from_db(cursor, f'admins WHERE name=\'{name}\'', 'a_password')
     if password == passi:
         print("worked")
-        worked = get_list("WORKSPACES", name) # of workspaces
+        # worked = get_list("WORKSPACES", name) # of workspaces
+        worked = 'True'
     cursor.close()
     return worked
 
@@ -146,7 +147,7 @@ async def update(sid, list):
 async def connect(sid, environ):
     print(f"{sid} connected")
     time.sleep(1)
-    # await update(sid, "chrome")
+    await update(sid, "chrome")
 
 
 @sio.event
@@ -164,7 +165,7 @@ async def identify(sid, data):
         print('tl')
     else:
         print("fl")
-        await disconnect(sid)
+        # await disconnect(sid)
     """
     if not identification_for_clients(cursor, name, passi):
         disconnect(sid)
@@ -187,7 +188,7 @@ def handle_client(client_socket, client_address, socket):
     msg = protocol.recv_protocol(client_socket)
     print(msg)
     ans = handling_req(msg)
-    protocol.send_protocol(ans,client_socket)
+    protocol.send_protocol(ans.encode(),client_socket)
     # while True:
     #    pass
     client_socket.close()
@@ -236,7 +237,8 @@ def start_server():
 
 
 def main():
-    print(get_list("APPS", "1"))
+    #print(get_list("APPS", "1"))
+    #print((('bob',),)[0][0])
     start_server()
 
 
