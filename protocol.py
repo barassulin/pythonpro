@@ -51,8 +51,8 @@ def recv_protocol(socket):
         print(message)
         try:
             message = message.decode()
-        except Exception:
-            pass
+        except Exception as err:
+            print(err)
     else:
         message = ''
     return message

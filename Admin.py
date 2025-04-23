@@ -69,9 +69,11 @@ def identification(client_socket, name, password):
 
 def signup(client_socket, name, password):
     # check the info i recv
-    send(client_socket, f"signup{SIGN}{name}{SIGN}{password}")
-
-
+    try:
+        send(client_socket, f"signup{SIGN}{name}{SIGN}{password}".encode())
+        print("here signup")
+    except Exception as err:
+        print(err)
 def main():
     pass
 

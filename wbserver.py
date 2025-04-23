@@ -67,7 +67,7 @@ def db_connection(func, args):
         my_socket = Admin.connect()
         if func == "up":
             # add to db the values
-            Admin.signup(args[0], args[1])
+            Admin.signup(my_socket, args[0], args[1])
             res = Admin.recv(my_socket)
             print("up")
         elif func == "in":
@@ -76,6 +76,7 @@ def db_connection(func, args):
             print("in")
         else:
             Admin.send(my_socket, f"{func}+{Admin.SIGN}+{args}")
+            print('else')
             res = Admin.recv()
     except Exception as err:
         print(err)
@@ -99,9 +100,10 @@ def handle_client_request(resource, client_socket, req):
     elif resource == "/login":
         b, name, passw, func = find_name_pass(req)
         res = db_connection(func, [name, passw])
-        if b == True and func == "in" and res:
+        if b == True and func == "in" and res is not "None":
             # check in database
             uri = "/home.html"
+            print("did got in")
         elif b == True and func == "up" and res:
             # enter in database
             print("insert db")
@@ -120,6 +122,7 @@ def handle_client_request(resource, client_socket, req):
         uri = REDIRECTION_DICTIONARY[uri]
         http_response = f"HTTP/1.1 302 Found\r\nLocation: {uri}\r\n\r\n".encode()
     if uri == "/forbidden":
+        print('forbidden')
         http_response = "HTTP/1.1 403 forbidden\r\nContent-Length: 0\r\n\r\n"
         http_response = http_response.encode()
     elif uri == "/error":

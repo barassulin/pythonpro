@@ -93,15 +93,16 @@ def identification_for_admins(name, password):
     cursor = DB.create_cursor()
     passi = DB.read_from_db(cursor, f'admins WHERE name = \'{name}\'', 'a_password')
     if password == passi:
+        print("worked")
         worked = get_list("WORKSPACES", name) # of workspaces
     cursor.close()
-    print("worked")
     return worked
 
 
 def admin_sign_up(name, password):
+    print("signingup")
     cursor = DB.create_cursor()
-    return DB.add_to_db(cursor, "admins(name,a_password)", f"{name}, {password}")
+    return DB.add_to_db(cursor, "admins(name,a_password)", f"\'{name}\', \'{password}\'")
 
 
 FUNC_DICT = {"identification": identification_for_admins,
@@ -114,12 +115,13 @@ FUNC_DICT = {"identification": identification_for_admins,
 
 
 def handling_req(req):
-    ans = None
+    ans = "None"
     try:
         parts_req = req.split('!')
         func = parts_req[0]
         if func in FUNC_DICT:
             ans = FUNC_DICT[func](parts_req[1], parts_req[2])
+            print("ans", ans)
     except Exception as err:
         print(err)
     return ans
