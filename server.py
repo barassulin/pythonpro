@@ -8,6 +8,7 @@
 # port for admins and diff port for clients
 #
 import socket
+import Admin
 import time
 import database
 import socket
@@ -147,6 +148,7 @@ async def update(sid, list):
 async def connect(sid, environ):
     print(f"{sid} connected")
     time.sleep(1)
+    my=Admin.connect()
     await update(sid, "chrome")
 
 
@@ -160,8 +162,9 @@ async def identify(sid, data):
     name = data.lower().split()[0]
     passi = data.lower().split()[1]
     ws_pass = data.lower().split()[2]
-    cursor = DB.create_cursor()
-    if DB.client_idedtify(cursor, name, passi, ws_pass):
+    my_socket = Admin.connect()
+    Admin.send(my_socket, ["client_idedtify", [name, passi, ws_pass]])
+    if Admin.recv(my_socket)=='True':
         print('tl')
     else:
         print("fl")
@@ -212,10 +215,12 @@ def accept_connections(server_socket):
 def start_server():
     """Start the server listening on two ports."""
     # Bind server socket to SERVER_PORT
+    '''
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     server_socket.bind((SERVER_IP, SERVER_PORT))
     server_socket.listen(LISTEN_SIZE)
     print(f"Server listening on {SERVER_PORT}")
+    '''
     """
     # Bind clients socket to CLIENTS_PORT
     clients_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -225,10 +230,11 @@ def start_server():
     """
     # sio.start_background_task(app.run, host=SERVER_IP, port=CLIENTS_PORT)
     # Accept connections on both sockets in separate threads
-
+    '''
     server_thread = threading.Thread(target=accept_connections, args=(server_socket,))
     server_thread.daemon = True  # Allow threads to exit when the main program exits
     server_thread.start()
+    '''
     aiohttp.web.run_app(app, host=SERVER_IP, port=CLIENTS_PORT)
 
     """

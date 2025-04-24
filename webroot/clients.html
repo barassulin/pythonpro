@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Clients</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    header { background: #4CAF50; color: white; padding: 1rem; text-align: center; }
+    #list-container {
+      display: flex; flex-direction: column; align-items: center;
+      padding: 2rem;
+    }
+    ul { list-style: none; padding: 0; width: 80%; max-width: 600px; }
+    li {
+      background: #f9f9f9; margin: .5rem 0; padding: 1rem;
+      border-radius: .5rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    footer { text-align: center; margin: 2rem; }
+    button {
+      background: #4CAF50; color: white; border: none;
+      padding: .75rem 1.5rem; border-radius: .5rem; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header><h1>Connected Clients</h1></header>
+
+  <div id="list-container">
+    <ul id="clients-list">
+      <!-- dynamic items go here -->
+    </ul>
+  </div>
+
+  <footer>
+    <button onclick="window.location.href='home.html'">Home</button>
+  </footer>
+
+  <script>
+    async function fetchClients() {
+      try {
+        const res = await fetch('/api/clients');          // :contentReference[oaicite:0]{index=0}
+        if (!res.ok) throw new Error(res.statusText);
+        const clients = await res.json();
+        const ul = document.getElementById('clients-list');
+        ul.innerHTML = '';
+        clients.forEach(c => {
+          const li = document.createElement('li');
+          li.textContent = `${c.name} (ID: ${c.id})`;
+          ul.appendChild(li);
+        });
+      } catch (err) {
+        console.error('Failed to load clients:', err);
+      }
+    }
+
+    // Initial load & refresh every 5 seconds
+    fetchClients();                                        // :contentReference[oaicite:1]{index=1}
+    setInterval(fetchClients, 5000);
+  </script>
+</body>
+</html>

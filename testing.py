@@ -1,10 +1,76 @@
+"""
+def recv(client_socket):
+    msg = protocol.recv_protocol(client_socket)
+    return msg
+
+
+def send(client_socket, msg):
+    return protocol.send_protocol(msg, client_socket)
+
+async def add_app_to_db(sid, table_name, values):
+
+    send(client_socket, f"add_to_db{SIGN}{table_name}{SIGN}{values}")
+    apps_list = recv(client_socket)
+    await update(sid, apps_list)  # await because update is async
+
+
+
+def add_to_db(client_socket, table_name, values):
+    # check the info i recv
+    worked = False
+    cursor = DB.create_cursor()
+    if DB.add_to_db(cursor, table_name, values):
+        apps_list = get_list(cursor)
+        worked = True
+    cursor.close()
+    return worked
+
+
+
+
+server:
+def identification_for_clients(name, password, ws_pass):
+    cursor = DB.create_cursor()
+    if DB.client_idedtify(cursor, name, passi, ws_pass):
+        print('tl')
+    else:
+        print("fl")
+        # await disconnect(sid)
+
+web:
+
+def identification(client_socket, name, password):
+    # check the info i recv
+    send(client_socket, f"identification{SIGN}{name}{SIGN}{password}".encode())
+
+
+"""
 import threading
 
+import Admin
 import database
-import protocol
-import socket
-import logging
+DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
 
+
+"""
+HTTP Server Shell
+Author: Barak Gonen and Nir Dweck
+Purpose: Provide a basis for Ex. 4
+Note: The code is written in a simple way, without classes, log files or
+other utilities, for educational purpose
+Usage: Fill the missing functions and constants
+Filled by: Bar Assulin
+"""
+
+import socket
+import re
+import logging
+import protocol
+
+
+# Constants
+WEB_ROOT = "C:/serveriii/webroot"  # Adjust this to your web document root
+DEFAULT_URL = "/index.html"
 DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
 
 QUEUE_LEN = 1
@@ -18,16 +84,57 @@ REDIRECTION_DICTIONARY = {"/moved": "/"
                           """
                           }
 
-def identification_for_clients(name, password, sid):
-    # to add the identifier to the db when connecting
-    worked = False
-    cursor = DB.create_cursor()
-    passi = DB.read_from_db(cursor, f"clients WHERE name = {name}", 'c_password')
-    if password == passi[0]:
-        worked = DB.update_val_in_db(cursor, 'clients', f'sid = {sid}', f'name = {name} and '
-                                                                        f'a_password = {password}')
-    cursor.close()
-    return worked
+
+#LOG_FORMAT = '%(levelname)s | %(asctime)s | %(processName)s | %(message)s'
+#LOG_LEVEL = logging.DEBUG
+#LOG_FILE = LOG_DIR + '/server.log'
+#LOG_DIR = 'log'
+
+
+def get_file_data(file_name):
+    """
+    Get data from file
+    :param file_name: the name of the file
+    :return: the file992/ data in a string
+    """
+    data = None
+    try:
+        file_path = WEB_ROOT + file_name
+        print(file_path)
+        with open(file_path, "rb") as file:
+            data = file.read()
+    except Exception as err:
+        logging.error("received error: " + str(err))
+    finally:
+        return data
+
+"""
+def db_connection(func, args):
+    res = "False"
+    print(func)
+    try:
+        my_socket = Admin.connect()
+        if func == "up":
+            # add to db the values
+            Admin.signup(my_socket, args[0], args[1])
+            res = Admin.recv(my_socket)
+            print(res)
+            print("up")
+        elif func == "in":
+            Admin.identification(my_socket, args[0], args[1])
+            res = Admin.recv(my_socket)
+            print(res)
+            print("in")
+        else:
+            Admin.send(my_socket, f"{func}+{Admin.SIGN}+{args}")
+            print('else')
+            res = Admin.recv()
+    except Exception as err:
+        print(err)
+    finally:
+        Admin.disconnect(my_socket)
+        return res
+"""
 
 
 def identification_for_admins(name, password):
@@ -42,6 +149,41 @@ def identification_for_admins(name, password):
     cursor.close()
     return worked
 
+
+def identification_for_clients(name, password, ws_pass):
+    cursor = DB.create_cursor()
+    if DB.client_idedtify(cursor, name, password, ws_pass):
+        print('tl')
+        ans = True
+    else:
+        print("fl")
+        ans = False
+    return ans
+
+def admin_sign_up(name, password):
+    print("signingup")
+    cursor = DB.create_cursor()
+    return str(DB.add_to_db(cursor, "admins(name,a_password)", f"\'{name}\', \'{password}\'"))
+
+
+FUNC_DICT = {
+    "in": identification_for_admins,
+    "up": admin_sign_up,
+    "pick": "later"
+            }
+
+
+def handling_req(parts_req):
+    ans = "None"
+    try:
+        func = parts_req[0]
+        print(func)
+        if func in FUNC_DICT:
+            ans = FUNC_DICT[func](parts_req[1], parts_req[2])
+            print("ans", ans)
+    except Exception as err:
+        print(err)
+    return ans
 
 
 def handle_client_request(resource, client_socket, req):
@@ -58,7 +200,7 @@ def handle_client_request(resource, client_socket, req):
         uri = DEFAULT_URL
     elif resource == "/login":
         b, name, passw, func = find_name_pass(req)
-        res = db_connection(func, [name, passw])
+        res = handling_req([func, name, passw])
         print("res", res)
         if b == True and func == "in" and res == 'True':
             # check in database
@@ -166,14 +308,18 @@ def handle_client(client_socket):
     :param client_socket: the socket for the communication with the client
     :return: None
     """
+    client_socket = client_socket
     print('Client connected')
     while True:
         try:
             print("ok1")
+            print(client_socket)
+
             client_request = client_socket.recv(1024).decode()
             while '\r\n\r\n' not in client_request:
                 client_request = client_request + client_socket.recv(1).decode()
                 print('trying')
+
             logging.debug("getting client request " + client_request)
             print(client_request)
             valid_http, resource = validate_http_request(client_request)
@@ -196,26 +342,7 @@ def handle_client(client_socket):
             break  # Close the connection to prevent further issues
 
     print('Closing connection')
-
-
-
-def handle_client(client_socket, client_address, socket):
-    """Handles communication with the client."""
-    try:
-        # my main
-        print(f"Connection established with {client_address} on {socket}")
-        # client_socket.send(b"Hello from the server!")
-
-        msg = protocol.recv_protocol(client_socket)
-        print(msg)
-        ans = handling_req(msg)
-        protocol.send_protocol(ans.encode(),client_socket)
-        # while True:
-        #    pass
-    except Exception as err:
-        print(err)
-    finally:
-        client_socket.close()
+    client_socket.close()
 
 
 def main():
@@ -224,7 +351,7 @@ def main():
         my_socket.bind((IP, PORT))
         my_socket.listen(QUEUE_LEN)
         print(f"Listening for connections on port {PORT}")
-
+        my
         while True:
             client_socket, client_address = my_socket.accept()
             print('New connection received from', client_address)
@@ -243,6 +370,8 @@ def main():
         print('Server socket exception:', err)
     finally:
         my_socket.close()
+
+
 
 if __name__ == "__main__":
     # logging.basicConfig(format=LOG_FORMAT, filename=LOG_FILE, level=LOG_LEVEL)
