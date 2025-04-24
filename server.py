@@ -103,7 +103,7 @@ def identification_for_admins(name, password):
 def admin_sign_up(name, password):
     print("signingup")
     cursor = DB.create_cursor()
-    return DB.add_to_db(cursor, "admins(name,a_password)", f"\'{name}\', \'{password}\'")
+    return str(DB.add_to_db(cursor, "admins(name,a_password)", f"\'{name}\', \'{password}\'"))
 
 
 FUNC_DICT = {"identification": identification_for_admins,
@@ -181,17 +181,22 @@ async def disconnect(sid):
 
 def handle_client(client_socket, client_address, socket):
     """Handles communication with the client."""
-    # my main
-    print(f"Connection established with {client_address} on {socket}")
-    # client_socket.send(b"Hello from the server!")
+    try:
+        # my main
+        print(f"Connection established with {client_address} on {socket}")
+        # client_socket.send(b"Hello from the server!")
 
-    msg = protocol.recv_protocol(client_socket)
-    print(msg)
-    ans = handling_req(msg)
-    protocol.send_protocol(ans.encode(),client_socket)
-    # while True:
-    #    pass
-    client_socket.close()
+        msg = protocol.recv_protocol(client_socket)
+        print(msg)
+        ans = handling_req(msg)
+        protocol.send_protocol(ans.encode(),client_socket)
+        # while True:
+        #    pass
+    except Exception as err:
+        print(err)
+    finally:
+        client_socket.close()
+
 
 
 def accept_connections(server_socket):

@@ -216,6 +216,7 @@ def handle_client(client_socket):
             client_request = client_socket.recv(1024).decode()
             while '\r\n\r\n' not in client_request:
                 client_request = client_request + client_socket.recv(1).decode()
+                print('trying')
             logging.debug("getting client request " + client_request)
             print(client_request)
             valid_http, resource = validate_http_request(client_request)
