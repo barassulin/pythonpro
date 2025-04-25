@@ -5,6 +5,7 @@ Author: Bar Assulin
 Date: 11.12.2023
 Description: server.py for cyber2.7
 """
+import pickle
 END_SIGN = "#"
 
 
