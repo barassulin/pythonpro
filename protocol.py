@@ -21,14 +21,15 @@ def send_protocol(message, socket):
         message = str(message)
         length = str(len(message))
         message = message.encode()
-
+    message = pickle.dumps(message)
     message = length.encode() + END_SIGN.encode() + message
     print("sending - protocol")
     print(message)
     try:
         socket.send(message)
         return True
-    except:
+    except Exception as err:
+        print(err)
         return False
 
 
@@ -51,7 +52,7 @@ def recv_protocol(socket):
         print("reciving - protocol")
         print(message)
         try:
-            message = message.decode()
+            message = pickle.loads(message)
         except Exception as err:
             print(err)
     else:

@@ -68,13 +68,13 @@ def remove_from_db(client_socket, table_name, condition):
 
 def identification(client_socket, name, password):
     # check the info i recv
-    send(client_socket, f"identification{SIGN}{name}{SIGN}{password}".encode())
+    send(client_socket, f"identification{SIGN}{name}{SIGN}{password}")
 
 
 def signup(client_socket, name, password):
     # check the info i recv
     try:
-        send(client_socket, f"signup{SIGN}{name}{SIGN}{password}".encode())
+        send(client_socket, f"signup{SIGN}{name}{SIGN}{password}")
         print("here signup")
     except Exception as err:
         print(err)

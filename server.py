@@ -163,7 +163,7 @@ async def identify(sid, data):
     passi = data.lower().split()[1]
     ws_pass = data.lower().split()[2]
     my_socket = Admin.connect()
-    Admin.send(my_socket, ["client_idedtify".encode(), [name, passi, ws_pass]])
+    Admin.send(my_socket, ["client_idedtify", [name, passi, ws_pass]])
     if Admin.recv(my_socket)=='True':
         print('tl')
     else:
@@ -192,7 +192,7 @@ def handle_client(client_socket, client_address, socket):
         msg = protocol.recv_protocol(client_socket)
         print(msg)
         ans = handling_req(msg)
-        protocol.send_protocol(ans.encode(),client_socket)
+        protocol.send_protocol(ans,client_socket)
         # while True:
         #    pass
     except Exception as err:
