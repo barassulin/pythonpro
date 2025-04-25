@@ -250,6 +250,7 @@ def start_server():
 def main():
     #print(get_list("APPS", "1"))
     #print((('bob',),)[0][0])
+    my=Admin.connect()
     start_server()
 
 

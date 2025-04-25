@@ -76,6 +76,7 @@ DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
 QUEUE_LEN = 1
 IP = '0.0.0.0'
 PORT = 8080
+SERVER_PORT = 20003
 SOCKET_TIMEOUT = 2
 REDIRECTION_DICTIONARY = {"/moved": "/"
                           """
@@ -301,7 +302,7 @@ def validate_http_request(request):
     return False, None
 
 
-def handle_client(client_socket):
+def handle_client_admin(client_socket):
     """
     Handles client requests: verifies client's requests are legal HTTP, calls
     function to handle the requests
@@ -344,27 +345,58 @@ def handle_client(client_socket):
     print('Closing connection')
     client_socket.close()
 
+def handle_client_app(client_socket):
+    print("handle")
+def connections_admin(socket):
+    """Accept connections from clients."""
+    while True:
+        client_socket, client_address = socket.accept()
+        print('New connection received from', client_address)
 
+        client_socket.settimeout(SOCKET_TIMEOUT)
+        server_thread = threading.Thread(
+            target=handle_client_admin,
+            args=(client_socket,),
+        )
+        server_thread.daemon = True
+        server_thread.start()
+
+def connections_apps(socket):
+    """Accept connections from clients."""
+    while True:
+        client_socket, client_address = socket.accept()
+        print('New connection received from', client_address)
+
+        client_socket.settimeout(SOCKET_TIMEOUT)
+        server_thread = threading.Thread(
+            target=handle_client_app,
+            args=(client_socket,),
+        )
+        server_thread.daemon = True
+        server_thread.start()
 def main():
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    my_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
         my_socket.bind((IP, PORT))
         my_socket.listen(QUEUE_LEN)
         print(f"Listening for connections on port {PORT}")
-        my
+
+        my_server_socket.bind((IP, SERVER_PORT))
+        my_server_socket.listen(QUEUE_LEN)
+        print(f"Listening for connections on port {SERVER_PORT}")
+#         server_thread = threading.Thread(target=handle_client_admin, args=(my_socket,))
+        # Handle server connections in a thread
+        server_thread = threading.Thread(target=connections_admin, args=(my_socket,))
+        server_thread.daemon = True
+        server_thread.start()
+
+        # Handle client connections in a thread
+        client_thread = threading.Thread(target=connections_apps, args=(my_server_socket,))
+        client_thread.daemon = True
+        client_thread.start()
         while True:
-            client_socket, client_address = my_socket.accept()
-            print('New connection received from', client_address)
-
-            client_socket.settimeout(SOCKET_TIMEOUT)
-            server_thread = threading.Thread(
-                target=handle_client,
-                args=(client_socket,),
-            )
-            server_thread.daemon = True
-            server_thread.start()
-
-            # **DO NOT close client_socket here** — the thread will close it.
+            pass
     except socket.error as err:
         logging.error("server socket error: " + str(err))
         print('Server socket exception:', err)

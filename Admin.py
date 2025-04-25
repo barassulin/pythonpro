@@ -34,9 +34,12 @@ SIGN = "!"
 
 
 def connect():
-    client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    client_socket.connect((SERVER_IP, SERVER_PORT))
-    return client_socket
+    try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((SERVER_IP, SERVER_PORT))
+        return client_socket
+    except Exception as err:
+        print(err)
 
 
 def disconnect(client_socket):
