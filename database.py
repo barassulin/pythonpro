@@ -71,6 +71,21 @@ class Database:
         myresult = myresult[0][0]
         return myresult
 
+    def list_from_db(self, cursor, table_name, row, value):
+        if table_name=='apps':
+            sql = f"""SELECT name FROM apps WHERE admins_id=%s"""
+        elif table_name=='clients' and row == 'name':
+            sql = f"SELECT name FROM clients WHERE admins_id=%"
+        elif table_name == 'clients' and row == 'socket':
+            sql = f"SELECT socket FROM clients WHERE admins_id=%"
+        else:
+            return False
+        cursor.execute(sql, value)
+        myresult = cursor.fetchall()
+        print("pass ", myresult)
+        # myresult = re.split(r'[;,\s]+:', myresult)
+        myresult = myresult[0]
+        return myresult
     def remove_from_db(self, cursor, table_name, condition):
         try:
             sql = f"DELETE FROM {table_name} WHERE ({condition})"

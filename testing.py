@@ -158,7 +158,7 @@ def identification_for_clients(name, password, admins_id):
     name = str(name)
     worked = 'False'
     cursor = DB.create_cursor()
-    passi = DB.read_from_db(cursor, f'clients WHERE admins_id = \'{admins_id}\' and name=\'{name}\'', 'c_password')
+    passi = DB.password_from_db(cursor, 'clients', (name, admins_id))
     if password == passi:
         print("worked")
         # worked = get_list("WORKSPACES", name) # of workspaces
@@ -354,12 +354,23 @@ def handle_client_admin(client_socket):
 
 
 
-def get_list(of_what, id_admin):
+def get_list(func, id_admin):
     # check port
     cursor = DB.create_cursor()
-    msg = DB.read_from_db(cursor, of_what + f" WHERE id={id_admin}", 'name')
+    if func == 'apps_list':
+        msg = DB.list_from_db(cursor, 'apps', 'name', id_admin)
+    elif func == 'clients_list':
+        msg = DB.list_from_db(cursor, 'clients', 'name', id_admin)
+    elif func == 'sockets_list':
+        msg = DB.list_from_db(cursor, 'clients', 'sockets', id_admin)
+    else:
+        return None
     cursor.close()
     return msg
+
+
+
+
 def ident_client(ws_pass):
     get_list("apps", ws_pass)
 
