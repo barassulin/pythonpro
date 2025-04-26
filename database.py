@@ -63,7 +63,7 @@ class Database:
         if table_name=='admins':
             sql = f"""SELECT a_password FROM admins WHERE name=%s"""
         elif table_name=='clients':
-            sql = f"SELECT c_password FROM clients WHERE name=% and admins_id=%"
+            sql = f"""SELECT c_password FROM clients WHERE name=%s and admins_id=%s"""
         cursor.execute(sql, value)
         myresult = cursor.fetchall()
         print("pass ", myresult)
@@ -75,9 +75,9 @@ class Database:
         if table_name=='apps':
             sql = f"""SELECT name FROM apps WHERE admins_id=%s"""
         elif table_name=='clients' and row == 'name':
-            sql = f"SELECT name FROM clients WHERE admins_id=%"
+            sql = f"SELECT name FROM clients WHERE admins_id=%s"
         elif table_name == 'clients' and row == 'socket':
-            sql = f"SELECT socket FROM clients WHERE admins_id=%"
+            sql = f"SELECT socket FROM clients WHERE admins_id=%s"
         else:
             return False
         cursor.execute(sql, value)
@@ -88,7 +88,7 @@ class Database:
         return myresult
 
     def remove_from_db(self, cursor, table_name, tuple):
-        sql = f"""DELETE FROM \'{table_name}\' WHERE name=%"""
+        sql = f"""DELETE FROM \'{table_name}\' WHERE name=%s"""
 
         try:
             cursor.execute(sql, tuple)
@@ -120,10 +120,10 @@ class Database:
         return myresult
     """
 
-    def update_val_in_db(self, cursor, table_name, values, condition):
+    def update_socket(self, cursor, values):
         try:
-            sql = f"UPDATE {table_name} SET {values} WHERE {condition}"
-            cursor.execute(sql)
+            sql = f"UPDATE clients SET socket=%s WHERE name=%s and c_password=%s"
+            cursor.execute(sql, values)
             self.connection.commit()
             return True
         except Exception as e:

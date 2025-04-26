@@ -258,6 +258,7 @@ def identify2(data):
 def main():
     #print(get_list("APPS", "1"))
     #print((('bob',),)[0][0])
+    # identify2('client password 1')
     start_server()
 
 

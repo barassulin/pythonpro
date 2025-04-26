@@ -154,15 +154,15 @@ def identification_for_admins(name, password):
 
 
 
-def identification_for_clients(name, password, admins_id):
+def identification_for_clients(client_socket ,name, password, admins_id):
     name = str(name)
     worked = 'False'
     cursor = DB.create_cursor()
     passi = DB.password_from_db(cursor, 'clients', (name, admins_id))
     if password == passi:
         print("worked")
+        worked = DB.update_socket(cursor, (str(client_socket), name, password))
         # worked = get_list("WORKSPACES", name) # of workspaces
-        worked = 'True'
     cursor.close()
     return worked
 
@@ -383,7 +383,12 @@ def handle_client_app(client_socket):
         name = msg.split()[1]
         passi = msg.split()[2]
         ws_pass = msg.split()[3]
-        protocol.send_protocol(identification_for_clients(name, passi, ws_pass), client_socket)
+        worked = identification_for_clients(client_socket, name, passi, ws_pass)
+        protocol.send_protocol(worked, client_socket)
+    else:
+        protocol.send_protocol("False", client_socket)
+
+
 
 
 
