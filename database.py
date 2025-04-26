@@ -2,6 +2,7 @@ import re
 
 import mysql.connector
 
+
 class Database:
     def __init__(self, host, user, password, database):
         """
@@ -60,9 +61,9 @@ class Database:
         """
 
     def password_from_db(self, cursor, table_name, value):
-        if table_name=='admins':
+        if table_name == 'admins':
             sql = f"""SELECT a_password FROM admins WHERE name=%s"""
-        elif table_name=='clients':
+        elif table_name == 'clients':
             sql = f"""SELECT c_password FROM clients WHERE name=%s and admins_id=%s"""
         cursor.execute(sql, value)
         myresult = cursor.fetchall()
@@ -88,7 +89,7 @@ class Database:
         return myresult
 
     def remove_from_db(self, cursor, table_name, tuple):
-        sql = f"""DELETE FROM \'{table_name}\' WHERE name=%s"""
+        sql = f"""DELETE FROM \'{table_name}\' WHERE id=%s"""
 
         try:
             cursor.execute(sql, tuple)

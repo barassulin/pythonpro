@@ -4,64 +4,91 @@
   <meta charset="UTF-8">
   <title>Home</title>
   <style>
+    /* Base reset */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
     body {
-      background: #eef2f5;
+      background: linear-gradient(135deg, #f0f4f8 0%, #d9e2ec 100%);
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       display: flex;
       align-items: center;
       justify-content: center;
-      height: 100vh;
-      margin: 0;
+      min-height: 100vh;
+      padding: 1rem;
     }
 
     .container {
-      background: white;
-      padding: 2rem 3rem;
-      border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      background: #ffffff;
+      padding: 2.5rem;
+      border-radius: 16px;
+      box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
       width: 100%;
-      max-width: 400px;
+      max-width: 480px;
       text-align: center;
     }
 
     h2 {
       margin-bottom: 1.5rem;
-      color: #333;
+      color: #102a43;
+      font-size: 2rem;
     }
 
     p {
       font-size: 1rem;
-      color: #444;
+      color: #334e68;
+      margin-bottom: 2rem;
     }
 
-    select {
-      width: 100%;
-      padding: 10px;
-      margin: 1rem 0;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-      background-color: #f9f9f9;
+    .buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
     }
 
-    input[type="submit"] {
-      padding: 10px 20px;
+    .buttons button {
+      padding: 0.75rem;
       border: none;
       border-radius: 8px;
-      background-color: #28a745;
-      color: white;
       font-size: 1rem;
       cursor: pointer;
-      transition: background 0.3s;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
 
-    input[type="submit"]:hover {
-      background-color: #218838;
+    .buttons button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
-    @media (max-width: 480px) {
+    .btn-primary {
+      background-color: #2f855a;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background-color: #276749;
+    }
+
+    .btn-secondary {
+      background-color: #3182ce;
+      color: #fff;
+    }
+
+    .btn-secondary:hover {
+      background-color: #2b6cb0;
+    }
+
+    .btn-home {
+      background-color: #718096;
+      color: #fff;
+    }
+
+    .btn-home:hover {
+      background-color: #4a5568;
+    }
+
+    @media (max-width: 500px) {
       .container {
-        padding: 1.5rem;
+        padding: 2rem 1.5rem;
       }
     }
   </style>
@@ -69,14 +96,14 @@
 <body>
   <div class="container">
     <h2>Welcome!</h2>
-    <form action="/pick" method="post">
-      <p>Choose a number:</p>
-      <select name="number" required>
-        <option value="" disabled selected>Select...</option>
-        <option value="clients">clients</option>
-        <option value="apps">apps</option>
-      </select>
-      <input type="submit" value="See Details">
+    <p>Please choose which data you’d like to view:</p>
+
+
+    <form action="/pick" method="post" class="buttons">
+
+      <button type="submit" name="action" value="clients" class="btn-primary">clients</button>
+      <button type="submit" name="action" value="apps" class="btn-secondary">apps</button>
+
     </form>
   </div>
 </body>

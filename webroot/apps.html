@@ -26,7 +26,7 @@
 <body>
   <header><h1>Available Apps</h1></header>
 
-  <div id="apps-container">
+  <div id="appsList">
     <!-- dynamic cards go here -->
   </div>
 
@@ -34,28 +34,25 @@
     <button onclick="window.location.href='home.html'">Home</button>
   </footer>
 
-  <script>
-    async function fetchApps() {
-      try {
-        const res = await fetch('/api/apps');             // :contentReference[oaicite:4]{index=4}
-        if (!res.ok) throw new Error(res.statusText);
-        const apps = await res.json();
-        const container = document.getElementById('apps-container');
-        container.innerHTML = '';
-        apps.forEach(a => {
-          const card = document.createElement('div');
-          card.className = 'app-card';
-          card.innerHTML = `<h2>${a.name}</h2><p>Version: ${a.version}</p>`;
-          container.appendChild(card);
-        });
-      } catch (err) {
-        console.error('Failed to load apps:', err);
-      }
-    }
+  <ul id="apps-list"></ul>
 
-    // Initial load & periodic refresh
-    fetchApps();                                           // :contentReference[oaicite:5]{index=5}
-    setInterval(fetchApps, 5000);
+
+  <script>
+    var AppsList = document.getElementById('apps-list');
+
+        // Fetch the list from the server
+        fetch('/get-apps-list') // your server must respond at this URL
+            .then(response => response.json()) // assuming server sends JSON
+            .then(data => {
+                // data should be an array like ["Apples", "Bananas"]
+                data.forEach(item => {
+                    var li = document.createElement('li');
+                    li.textContent = item;
+                    appsList.appendChild(li);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching apps list:', error);
   </script>
 </body>
 </html>

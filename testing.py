@@ -67,7 +67,6 @@ import re
 import logging
 import protocol
 
-
 # Constants
 WEB_ROOT = "C:/serveriii/webroot"  # Adjust this to your web document root
 DEFAULT_URL = "/index.html"
@@ -108,6 +107,7 @@ def get_file_data(file_name):
         logging.error("received error: " + str(err))
     finally:
         return data
+
 
 """
 def db_connection(func, args):
@@ -150,8 +150,6 @@ def identification_for_admins(name, password):
         worked = 'True'
     cursor.close()
     return worked
-
-
 
 
 def identification_for_clients(client_socket ,name, password, admins_id):
@@ -219,8 +217,17 @@ def handle_client_request(resource, client_socket, req):
             uri = "/home.html"
         else:
             uri = "/forbidden"
-    elif resource == "/details":
-        uri = "/details.html"
+    elif resource == "/pick":
+        b, action = find_action(req)
+        action = action[0]
+        print(action)
+
+        if b and action == 'clients':
+            uri = "/clients.html"
+        elif b and action == 'apps':
+            uri = "/apps.html"
+        else:
+            uri = "/forbidden"
         print("p")
     else:
         uri = DEFAULT_URL
@@ -284,6 +291,18 @@ def find_name_pass(request):
         return True, user, pwd, extra
 
     return False, None, None, None
+
+
+def find_action(request):
+    # username=a&password=1234&action=signin
+    pattern = r"action=(.*)"
+    m = re.search(pattern, request)
+    if m:
+        action = m.groups()
+        print(action)
+        return True, action
+
+    return False, None
 
 
 def validate_http_request(request):
@@ -369,10 +388,8 @@ def get_list(func, id_admin):
     return msg
 
 
-
-
-def ident_client(ws_pass):
-    get_list("apps", ws_pass)
+def ident_client(admins_id):
+    get_list("apps", admins_id)
 
 
 def handle_client_app(client_socket):
@@ -389,9 +406,6 @@ def handle_client_app(client_socket):
         protocol.send_protocol("False", client_socket)
 
 
-
-
-
 def connections_admin(socket):
     """Accept connections from clients."""
     while True:
@@ -406,6 +420,7 @@ def connections_admin(socket):
         server_thread.daemon = True
         server_thread.start()
 
+
 def connections_apps(socket):
     """Accept connections from clients."""
     while True:
@@ -419,6 +434,8 @@ def connections_apps(socket):
         )
         server_thread.daemon = True
         server_thread.start()
+
+
 def main():
     my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     my_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
