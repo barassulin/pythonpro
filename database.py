@@ -86,22 +86,23 @@ class Database:
         # myresult = re.split(r'[;,\s]+:', myresult)
         myresult = myresult[0]
         return myresult
-    def remove_from_db(self, cursor, table_name, condition):
-        try:
-            sql = f"DELETE FROM {table_name} WHERE ({condition})"
 
-            cursor.execute(sql)
+    def remove_from_db(self, cursor, table_name, tuple):
+        sql = f"""DELETE FROM \'{table_name}\' WHERE name=%"""
+
+        try:
+            cursor.execute(sql, tuple)
             self.connection.commit()
             return True
         except Exception as e:
             # log
             return False
 
-
+    """
     def client_identify(self, cursor, name, password, admin_id):
-        """
-        Securely check a client's password.
-        """
+         
+        #Securely check a client's password.
+        
         sql = (
             "SELECT c_password "
             "FROM clients "
@@ -109,13 +110,15 @@ class Database:
         )
         cursor.execute(sql, (name, admin_id))
         row = cursor.fetchone()
-        return bool(row and row[0] == password)
-
+        return str(bool(row and row[0] == password))
+    
+    
     def read_all_t(self, cursor):
         sql = f'show * tables in {self.database}'
         cursor.execute(sql)
         myresult = cursor.fetchall()
         return myresult
+    """
 
     def update_val_in_db(self, cursor, table_name, values, condition):
         try:
