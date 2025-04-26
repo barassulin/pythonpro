@@ -52,10 +52,11 @@ class Database:
             return False
 
 
-    def client_idedtify(self, cursor, name, password, ws_pass):
+    def client_idedtify(self, cursor, name, password, id):
         try:
-            sql = (f"select c_password from clients where name = {name} and workspace_id = (select id from workspaces"
-                   f" where ws_pass = {ws_pass})")
+            sql = (f"select c_password from clients where name = \'{name}\' and admins_id = \'{id}\'")
+                   #f"(select id from admins"
+                   #f" where admins_id = {id})")
             cursor.execute(sql)
             myresult = cursor.fetchall()
             if myresult == password:

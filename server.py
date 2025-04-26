@@ -75,7 +75,7 @@ def check_workspace_clients(sid):
     id_ws = read_from_db(f'clients where sid = {sid}', 'workspace_id')
     return id_ws[0][0]
 
-
+"""
 def identification_for_clients(name, password, sid):
     # to add the identifier to the db when connecting
     worked = False
@@ -86,7 +86,7 @@ def identification_for_clients(name, password, sid):
                                                                         f'a_password = {password}')
     cursor.close()
     return worked
-
+"""
 
 def identification_for_admins(name, password):
     name = str(name)
@@ -158,13 +158,9 @@ async def identify(sid, data):
     # dummy check
     # data protocol with ' '
     # cursor = DB.create_cursor()
-
-    name = data.lower().split()[0]
-    passi = data.lower().split()[1]
-    ws_pass = data.lower().split()[2]
     my_socket = Admin.connect()
-    Admin.send(my_socket, ["client_idedtify", [name, passi, ws_pass]])
-    if Admin.recv(my_socket)=='True':
+    Admin.send(my_socket, f"client_idedtify {data.lower()}")
+    if Admin.recv(my_socket) == 'True':
         print('tl')
     else:
         print("fl")
@@ -192,14 +188,13 @@ def handle_client(client_socket, client_address, socket):
         msg = protocol.recv_protocol(client_socket)
         print(msg)
         ans = handling_req(msg)
-        protocol.send_protocol(ans,client_socket)
+        protocol.send_protocol(ans, client_socket)
         # while True:
         #    pass
     except Exception as err:
         print(err)
     finally:
         client_socket.close()
-
 
 
 def accept_connections(server_socket):
@@ -246,11 +241,23 @@ def start_server():
     while True:
         pass
 
-
+def identify2(data):
+    print(f"Got: {data}")
+    # dummy check
+    # data protocol with ' '
+    # cursor = DB.create_cursor()
+    """name = data.split()[0]
+    passi = data.split()[1]
+    ws_pass = data.split()[2]"""
+    my_socket = Admin.connect()
+    Admin.send(my_socket, f"client_idedtify {data}")
+    if Admin.recv(my_socket) == 'True':
+        print('tl')
+    else:
+        print("fl")
 def main():
     #print(get_list("APPS", "1"))
     #print((('bob',),)[0][0])
-    my = Admin.connect()
     start_server()
 
 

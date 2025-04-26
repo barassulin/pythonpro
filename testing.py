@@ -151,15 +151,20 @@ def identification_for_admins(name, password):
     return worked
 
 
-def identification_for_clients(name, password, ws_pass):
+
+
+def identification_for_clients(name, password, admins_id):
+    name = str(name)
+    worked = 'False'
     cursor = DB.create_cursor()
-    if DB.client_idedtify(cursor, name, password, ws_pass):
-        print('tl')
-        ans = True
-    else:
-        print("fl")
-        ans = False
-    return ans
+    passi = DB.read_from_db(cursor, f'clients WHERE admins_id = \'{admins_id}\' and name=\'{name}\'', 'c_password')
+    if password == passi:
+        print("worked")
+        # worked = get_list("WORKSPACES", name) # of workspaces
+        worked = 'True'
+    cursor.close()
+    return worked
+
 
 def admin_sign_up(name, password):
     print("signingup")
@@ -345,8 +350,31 @@ def handle_client_admin(client_socket):
     print('Closing connection')
     client_socket.close()
 
+
+
+
+def get_list(of_what, id_admin):
+    # check port
+    cursor = DB.create_cursor()
+    msg = DB.read_from_db(cursor, of_what + f" WHERE id={id_admin}", 'name')
+    cursor.close()
+    return msg
+def ident_client(ws_pass):
+    get_list("apps", ws_pass)
+
+
 def handle_client_app(client_socket):
-    print("handle")
+    msg = protocol.recv_protocol(client_socket)
+    print(msg.split())
+    func = msg.split()[0]
+    if func == "client_idedtify":
+        name = msg.split()[1]
+        passi = msg.split()[2]
+        ws_pass = msg.split()[3]
+        protocol.send_protocol(identification_for_clients(name, passi, ws_pass), client_socket)
+
+
+
 def connections_admin(socket):
     """Accept connections from clients."""
     while True:
@@ -367,7 +395,7 @@ def connections_apps(socket):
         client_socket, client_address = socket.accept()
         print('New connection received from', client_address)
 
-        client_socket.settimeout(SOCKET_TIMEOUT)
+        # client_socket.settimeout(SOCKET_TIMEOUT)
         server_thread = threading.Thread(
             target=handle_client_app,
             args=(client_socket,),
