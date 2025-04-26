@@ -1,6 +1,6 @@
 import re
 
-import pymysql
+import mysql.connector
 
 class Database:
     def __init__(self, host, user, password, database):
@@ -10,7 +10,7 @@ class Database:
         self.password = password
         self.database = database
         """
-        self.connection = pymysql.connect(
+        self.connection = mysql.connector.connect(
             host = host,
             user=user,
             password=password,
@@ -18,9 +18,36 @@ class Database:
         )
 
     def create_cursor(self):
-        cursor = self.connection.cursor()
+        cursor = self.connection.cursor(prepared=True)
         return cursor
 
+    def add_to_db(self, cursor, tuple, table):
+        if table == 'admins' :
+            sql_insert_query = """ INSERT INTO admins
+                                   (name, a_password) VALUES (%s,%s)"""
+        elif table == 'apps':
+            sql_insert_query = """ INSERT INTO apps
+                                               (name, admins_id) VALUES (%s,%s)"""
+        elif table == 'clients':
+            sql_insert_query = """ INSERT INTO clients
+                                               (name, c_password, admins_id) VALUES (%s,%s)"""
+        else:
+            return 'False'
+        try:
+            cursor.execute(sql_insert_query, tuple)
+            self.connection.commit()
+            print(f"Data inserted successfully into {table} table using the prepared statement")
+            return 'True'
+        except mysql.connector.Error as error:
+            print("parameterized query failed {}".format(error))
+            return 'False'
+        finally:
+            if self.connection.is_connected():
+                cursor.close()
+                self.connection.close()
+            print("MySQL connection is closed")
+
+        """
     def add_to_db(self, cursor, table_name, values):
         try:
             sql = f"INSERT INTO {table_name} VALUES ({values})"
@@ -30,10 +57,14 @@ class Database:
         except Exception as e:
             # log
             return False
+        """
 
-    def read_from_db(self, cursor, table_name, rows):
-        sql = f"SELECT {rows} FROM {table_name}"
-        cursor.execute(sql)
+    def password_from_db(self, cursor, table_name, value):
+        if table_name=='admins':
+            sql = f"""SELECT a_password FROM admins WHERE name=%s"""
+        elif table_name=='clients':
+            sql = f"SELECT c_password FROM clients WHERE name=% and admins_id=%"
+        cursor.execute(sql, value)
         myresult = cursor.fetchall()
         print("pass ", myresult)
         # myresult = re.split(r'[;,\s]+:', myresult)
@@ -52,19 +83,18 @@ class Database:
             return False
 
 
-    def client_idedtify(self, cursor, name, password, id):
-        try:
-            sql = (f"select c_password from clients where name = \'{name}\' and admins_id = \'{id}\'")
-                   #f"(select id from admins"
-                   #f" where admins_id = {id})")
-            cursor.execute(sql)
-            myresult = cursor.fetchall()
-            if myresult == password:
-                return True
-        except Exception as e:
-            # log
-            print('log')
-        return False
+    def client_identify(self, cursor, name, password, admin_id):
+        """
+        Securely check a client's password.
+        """
+        sql = (
+            "SELECT c_password "
+            "FROM clients "
+            "WHERE name = %s AND admins_id = %s"
+        )
+        cursor.execute(sql, (name, admin_id))
+        row = cursor.fetchone()
+        return bool(row and row[0] == password)
 
     def read_all_t(self, cursor):
         sql = f'show * tables in {self.database}'

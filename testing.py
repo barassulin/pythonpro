@@ -142,7 +142,8 @@ def identification_for_admins(name, password):
     name = str(name)
     worked = 'False'
     cursor = DB.create_cursor()
-    passi = DB.read_from_db(cursor, f'admins WHERE name=\'{name}\'', 'a_password')
+
+    passi = DB.password_from_db(cursor, 'admins', (name,))
     if password == passi:
         print("worked")
         # worked = get_list("WORKSPACES", name) # of workspaces
@@ -169,7 +170,7 @@ def identification_for_clients(name, password, admins_id):
 def admin_sign_up(name, password):
     print("signingup")
     cursor = DB.create_cursor()
-    return str(DB.add_to_db(cursor, "admins(name,a_password)", f"\'{name}\', \'{password}\'"))
+    return str(DB.add_to_db(cursor, (name, password), "admins"))
 
 
 FUNC_DICT = {
