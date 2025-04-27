@@ -90,6 +90,18 @@ REDIRECTION_DICTIONARY = {"/moved": "/"
 #LOG_FILE = LOG_DIR + '/server.log'
 #LOG_DIR = 'log'
 
+import json, os
+
+apps_list = [
+    {"id": 1, "name": "instagram"},
+    {"id": 2, "name": "chrome"},
+    {"id": 3, "name": "pinterest"},
+    {"id": 4, "name": "spotify"},
+    {"id": 5, "name": "instagram2"},
+    {"id": 6, "name": "chrome2"},
+    {"id": 7, "name": "pinterest2"},
+    {"id": 8, "name": "spotify2"},
+]
 
 def get_file_data(file_name):
     """
@@ -215,6 +227,7 @@ def handle_client_request(resource, client_socket, req):
             # enter in database
             print("insert db")
             uri = "/home.html"
+
         else:
             uri = "/forbidden"
     elif resource == "/pick":
@@ -229,6 +242,8 @@ def handle_client_request(resource, client_socket, req):
         else:
             uri = "/forbidden"
         print("p")
+    elif resource == '/get-apps-list':
+        uri = '.js'
     else:
         uri = DEFAULT_URL
     http_response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
@@ -250,11 +265,16 @@ def handle_client_request(resource, client_socket, req):
 
         if (file_type == "html" or file_type == "jpg" or file_type == "gif" or file_type == "css" or file_type == "js"
                 or file_type == "txt" or file_type == "ico" or file_type == "png"):
-            try:
-                data = get_file_data(uri) # DEFAULT_URL.encode()
-                print("data: ", data)
-            except Exception as err:
-                print(err)
+            print('f', file_type)
+            if file_type == 'js':
+                data = json.dumps(apps_list).encode()
+                print(data)
+            else:
+                try:
+                    data = get_file_data(uri) # DEFAULT_URL.encode()
+                    print("data: ", data)
+                except Exception as err:
+                    print(err)
             leng = len(data)
             if file_type == "html":
                 http_header = f"HTTP/1.1 200 OK\r\nContent-Type: text/html\r\nContent-Length: {leng}\r\n\r\n"

@@ -1,58 +1,129 @@
+<!-- home.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>Apps List</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    header { background: #2196F3; color: white; padding: 1rem; text-align: center; }
-    #apps-container {
-      display: flex; flex-wrap: wrap; justify-content: center;
-      gap: 1rem; padding: 2rem;
+    /* Base styles */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
     }
-    .app-card {
-      background: #fff; padding: 1rem; width: 200px;
-      border-radius: .5rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-      display: flex; flex-direction: column; align-items: center;
+    header {
+      background: #2196F3;
+      color: white;
+      padding: 1rem;
+      text-align: center;
     }
-    .app-card h2 { margin: .5rem 0; font-size: 1.2rem; }
-    footer { text-align: center; margin: 2rem; }
-    button {
-      background: #2196F3; color: white; border: none;
-      padding: .75rem 1.5rem; border-radius: .5rem; cursor: pointer;
+    main {
+      flex: 1; padding: 2rem;
+    }
+    #apps-list {
+      list-style: none;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    #apps-list li {
+      background: white;
+      margin-bottom: 1rem;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      font-size: 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .remove-btn {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .remove-btn:hover {
+      background: #c53030;
+    }
+    footer {
+      background: #fff;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    }
+    footer button {
+      background: #2f855a;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      margin: 0 0.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 1rem;
+    }
+    .add-btn {
+      background: #3182ce;
+    }
+    footer button:hover {
+      opacity: 0.9;
     }
   </style>
 </head>
 <body>
   <header><h1>Available Apps</h1></header>
-
-  <div id="appsList">
-    <!-- dynamic cards go here -->
-  </div>
-
+  <main>
+    <ul id="apps-list"></ul>
+  </main>
   <footer>
-    <button onclick="window.location.href='home.html'">Home</button>
+    <button onclick="window.location.href='/'">Home</button>
+    <button class="add-btn" onclick="window.location.href='/add-app'">Add App</button>
   </footer>
-
-  <ul id="apps-list"></ul>
-
-
   <script>
-    var AppsList = document.getElementById('apps-list');
+    const appsListEl = document.getElementById('apps-list');
 
-        // Fetch the list from the server
-        fetch('/get-apps-list') // your server must respond at this URL
-            .then(response => response.json()) // assuming server sends JSON
-            .then(data => {
-                // data should be an array like ["Apples", "Bananas"]
-                data.forEach(item => {
-                    var li = document.createElement('li');
-                    li.textContent = item;
-                    appsList.appendChild(li);
-                });
-            })
-            .catch(error => {
-                console.error('Error fetching apps list:', error);
+    // Load and render the apps
+    function loadApps() {
+      fetch('/get-apps-list')
+        .then(r => r.json())
+        .then(data => {
+          appsListEl.innerHTML = '';
+          data.forEach(item => {
+            const li = document.createElement('li');
+            li.innerHTML = `
+              <span>${item.name}</span>
+              <button class="remove-btn" data-id="${item.id}">Remove</button>
+            `;
+            appsListEl.appendChild(li);
+          });
+        })
+        .catch(console.error);
+    }
+
+    // Delegate remove clicks
+    appsListEl.addEventListener('click', e => {
+      if (e.target.matches('.remove-btn')) {
+        const id = e.target.dataset.id;
+        fetch('/remove-app', {
+          method: 'POST',
+          headers: {'Content-Type':'application/json'},
+          body: JSON.stringify({id})
+        })
+        .then(res => {
+          if (res.ok) loadApps();
+          else alert('Failed to remove');
+        })
+        .catch(console.error);
+      }
+    });
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', loadApps);
   </script>
 </body>
 </html>
