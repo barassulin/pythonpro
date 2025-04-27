@@ -3,13 +3,9 @@ import json, os
 
 apps_list = [
     {"id": 1, "name": "instagram"},
-    {"id": 2, "name": "chrome"},
-    {"id": 3, "name": "pinterest"},
-    {"id": 4, "name": "spotify"},
-    {"id": 5, "name": "instagram2"},
-    {"id": 6, "name": "chrome2"},
-    {"id": 7, "name": "pinterest2"},
-    {"id": 8, "name": "spotify2"},
+    {"id": 2, "name": "pinterest"},
+    {"id": 3, "name": "chrome2"},
+    {"id": 4, "name": "spotify2"},
 ]
 
 class SimpleHandler(BaseHTTPRequestHandler):

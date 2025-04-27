@@ -1,4 +1,3 @@
-<!-- home.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -84,40 +83,44 @@
     <button onclick="window.location.href='/'">Home</button>
     <button class="add-btn" onclick="window.location.href='/add-app'">Add App</button>
   </footer>
+
   <script>
     const appsListEl = document.getElementById('apps-list');
 
-    // Load and render the apps
+    // Load and render the apps, sending username from localStorage
     function loadApps() {
-      fetch('/get-apps-list')
-        .then(r => r.json())
-        .then(data => {
-          appsListEl.innerHTML = '';
-          data.forEach(item => {
-            const li = document.createElement('li');
-            li.innerHTML = `
-              <span>${item.name}</span>
-              <button class="remove-btn" data-id="${item.id}">Remove</button>
-            `;
-            appsListEl.appendChild(li);
-          });
-        })
-        .catch(console.error);
+      const username = localStorage.getItem('username');          // get stored username :contentReference[oaicite:0]{index=0}
+
+      fetch('/get-apps-list', {                                   // POST with JSON body :contentReference[oaicite:1]{index=1}
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })                        // serialize to JSON :contentReference[oaicite:2]{index=2}
+      })
+      .then(res => res.json())
+      .then(data => {
+        appsListEl.innerHTML = '';
+        data.forEach(item => {
+          const li = document.createElement('li');
+          li.innerHTML = `
+            <span>${item.name}</span>
+            <button class="remove-btn" data-id="${item.id}">Remove</button>
+          `;
+          appsListEl.appendChild(li);
+        });
+      })
+      .catch(console.error);
     }
 
-    // Delegate remove clicks
+    // Delegate remove clicks (unchanged)
     appsListEl.addEventListener('click', e => {
       if (e.target.matches('.remove-btn')) {
         const id = e.target.dataset.id;
         fetch('/remove-app', {
           method: 'POST',
-          headers: {'Content-Type':'application/json'},
-          body: JSON.stringify({id})
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ id })
         })
-        .then(res => {
-          if (res.ok) loadApps();
-          else alert('Failed to remove');
-        })
+        .then(res => res.ok ? loadApps() : alert('Failed to remove'))
         .catch(console.error);
       }
     });

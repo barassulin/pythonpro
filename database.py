@@ -72,6 +72,16 @@ class Database:
         myresult = myresult[0][0]
         return myresult
 
+    def get_id(self, cursor, table, value):
+        sql = f"""SELECT id FROM {table} WHERE name=%s"""
+        cursor.execute(sql, value)
+        myresult = cursor.fetchall()
+        print("pass ", myresult)
+        # myresult = re.split(r'[;,\s]+:', myresult)
+        #myresult = myresult[0][0]
+        print(myresult)
+        return myresult
+
     def list_from_db(self, cursor, table_name, row, value):
         if table_name=='apps':
             sql = f"""SELECT name FROM apps WHERE admins_id=%s"""
@@ -80,12 +90,12 @@ class Database:
         elif table_name == 'clients' and row == 'socket':
             sql = f"SELECT socket FROM clients WHERE admins_id=%s"
         else:
-            return False
+            return 'False'
         cursor.execute(sql, value)
         myresult = cursor.fetchall()
         print("pass ", myresult)
         # myresult = re.split(r'[;,\s]+:', myresult)
-        myresult = myresult[0]
+
         return myresult
 
     def remove_from_db(self, cursor, table_name, tuple):
@@ -132,4 +142,6 @@ class Database:
             print(e)
             return False
 
-
+    def list_to_list(self, cursor, list, table):
+        listi = [{"id": self.get_id(cursor, table, name)[0], "name": name} for name in list]
+        return listi

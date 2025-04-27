@@ -94,13 +94,9 @@ import json, os
 
 apps_list = [
     {"id": 1, "name": "instagram"},
-    {"id": 2, "name": "chrome"},
+    {"id": 5, "name": "chrome"},
     {"id": 3, "name": "pinterest"},
-    {"id": 4, "name": "spotify"},
-    {"id": 5, "name": "instagram2"},
-    {"id": 6, "name": "chrome2"},
-    {"id": 7, "name": "pinterest2"},
-    {"id": 8, "name": "spotify2"},
+    {"id": 9, "name": "spotify"},
 ]
 
 def get_file_data(file_name):
@@ -213,6 +209,10 @@ def handle_client_request(resource, client_socket, req):
     """
     print("handling")
     print(resource)
+    g = False
+    if not g:
+        g, username = find_name(req)
+        print(g)
     if resource == '/':
         uri = DEFAULT_URL
     elif resource == "/login":
@@ -237,13 +237,14 @@ def handle_client_request(resource, client_socket, req):
 
         if b and action == 'clients':
             uri = "/clients.html"
+
         elif b and action == 'apps':
             uri = "/apps.html"
         else:
             uri = "/forbidden"
         print("p")
     elif resource == '/get-apps-list':
-        uri = '.js'
+        uri = 'app_list.js'
     else:
         uri = DEFAULT_URL
     http_response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
@@ -266,8 +267,15 @@ def handle_client_request(resource, client_socket, req):
         if (file_type == "html" or file_type == "jpg" or file_type == "gif" or file_type == "css" or file_type == "js"
                 or file_type == "txt" or file_type == "ico" or file_type == "png"):
             print('f', file_type)
-            if file_type == 'js':
-                data = json.dumps(apps_list).encode()
+            if uri == 'app_list.js' and g == True:
+                print('got')
+                cursor = DB.create_cursor()
+                id = DB.get_id(cursor,'admins', username)
+                print(id)
+                listi = DB.list_from_db(cursor, 'apps', 'name', id[0])
+                print(listi)
+                data = json.dumps(DB.list_to_list(cursor, listi, 'apps')).encode()
+                cursor.close()
                 print(data)
             else:
                 try:
@@ -313,6 +321,16 @@ def find_name_pass(request):
     return False, None, None, None
 
 
+def find_name(request):
+
+    pattern = r"{\"username\":\"(.*)\"}"
+    m = re.search(pattern, request)
+    if m:
+        username = m.groups()
+        print(username)
+        return True, username
+
+    return False, None
 def find_action(request):
     # username=a&password=1234&action=signin
     pattern = r"action=(.*)"
@@ -354,13 +372,11 @@ def handle_client_admin(client_socket):
     :param client_socket: the socket for the communication with the client
     :return: None
     """
-    client_socket = client_socket
     print('Client connected')
     while True:
         try:
             print("ok1")
             print(client_socket)
-
             client_request = client_socket.recv(1024).decode()
             while '\r\n\r\n' not in client_request:
                 client_request = client_request + client_socket.recv(1).decode()
