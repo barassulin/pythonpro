@@ -5,79 +5,134 @@
   <title>Sign In / Sign Up</title>
   <link rel="shortcut icon" href="favicon.ico">
   <style>
-    body {
-      background: #f0f4f8;
+    /* Base & Layout */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      height: 100%;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      margin: 0;
+      background: linear-gradient(135deg, #ece9e6 0%, #ffffff 100%);
+      display: flex; justify-content: center; align-items: center;
     }
-
-
     .container {
-      background: white;
-      padding: 2rem 3rem;
+      background: #fff;
+      padding: 2rem 2.5rem;
       border-radius: 12px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
       width: 100%;
-      max-width: 400px;
+      max-width: 360px;
       text-align: center;
     }
 
     h2 {
       margin-bottom: 1.5rem;
       color: #333;
+      font-size: 1.75rem;
     }
 
-    input[type="text"],
-    input[type="password"] {
+    /* Floating Labels */
+    .field {
+      position: relative;
+      margin-bottom: 1.75rem;
+    }
+    .field input {
       width: 100%;
-      padding: 10px;
-      margin: 10px 0 20px;
-      border: 1px solid #ccc;
-      border-radius: 8px;
+      padding: 12px 12px 12px 0;
+      border: none;
+      border-bottom: 2px solid #ccc;
       font-size: 1rem;
+      background: transparent;
+      transition: border-color 0.3s;
+    }
+    .field label {
+      position: absolute;
+      left: 0;
+      top: 12px;
+      color: #777;
+      font-size: 0.95rem;
+      pointer-events: none;
+      transition: transform 0.2s, font-size 0.2s;
+    }
+    .field input:focus,
+    .field input:not(:placeholder-shown) {
+      outline: none;
+      border-bottom-color: #007BFF;
+    }
+    .field input:focus + label,
+    .field input:not(:placeholder-shown) + label {
+      transform: translateY(-24px);
+      font-size: 0.8rem;
+      color: #007BFF;
     }
 
-    button {
-      padding: 10px 20px;
-      margin: 0 10px;
+    /* Buttons */
+    .btn-group {
+      display: flex;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .btn-group button {
+      flex: 1 1 45%;
+      padding: 0.75rem;
       border: none;
       border-radius: 8px;
-      background-color: #007BFF;
-      color: white;
       font-size: 1rem;
       cursor: pointer;
-      transition: background 0.3s;
+      color: #fff;
+      transition: background 0.3s, transform 0.1s;
     }
+    .btn-signin { background: #007BFF; }
+    .btn-signup { background: #28a745; }
+    .btn-signin:hover { background: #0056b3; transform: translateY(-1px); }
+    .btn-signup:hover { background: #1e7e34; transform: translateY(-1px); }
 
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    @media (max-width: 480px) {
-      .container {
-        padding: 1.5rem;
-      }
-
-      button {
-        width: 100%;
-        margin: 10px 0;
-      }
+    /* Responsive */
+    @media (max-width: 400px) {
+      .container { padding: 1.5rem 1.75rem; }
+      .btn-group button { flex: 1 1 100%; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <h2>Sign In / Sign Up</h2>
-    <form action="/login" method="post">
-      <input name="username" type="text" placeholder="Username" required><br>
-      <input name="password" type="password" placeholder="Password" required><br>
-      <button name="action" value="signin">Sign In</button>
-      <button name="action" value="signup">Sign Up</button>
+    <form id="login-form" action="/login" method="post">
+      <div class="field">
+        <input id="username" name="username" type="text" placeholder=" " required>
+        <label for="username">Username</label>
+      </div>
+      <div class="field">
+        <input id="password" name="password" type="password" placeholder=" " required>
+        <label for="password">Password</label>
+      </div>
+      <div class="btn-group">
+        <button class="btn-signin" name="action" value="signin" type="submit">
+          Sign In
+        </button>
+        <button class="btn-signup" name="action" value="signup" type="submit">
+          Sign Up
+        </button>
+      </div>
     </form>
   </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const userInput = document.getElementById('username');
+      const form      = document.getElementById('login-form');
+
+      // Pre-fill from localStorage
+      const saved = localStorage.getItem('username');
+      if (saved) userInput.value = saved;
+
+      // Save on input & submit
+      userInput.addEventListener('input', () => {
+        localStorage.setItem('username', userInput.value);
+      });
+      form.addEventListener('submit', () => {
+        localStorage.setItem('username', userInput.value);
+      });
+    });
+  </script>
 </body>
 </html>
