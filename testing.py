@@ -150,7 +150,8 @@ def identification_for_admins(name, password):
     name = str(name)
     worked = 'False'
     cursor = DB.create_cursor()
-
+    #uuid
+    # ssl
     passi = DB.password_from_db(cursor, 'admins', (name,))
     if password == passi:
         print("worked")
@@ -212,7 +213,7 @@ def handle_client_request(resource, client_socket, req):
     g = False
     if not g:
         g, username = find_name(req)
-        print(g)
+        print('g', g)
     if resource == '/':
         uri = DEFAULT_URL
     elif resource == "/login":
@@ -245,6 +246,16 @@ def handle_client_request(resource, client_socket, req):
         print("p")
     elif resource == '/get-apps-list':
         uri = 'app_list.js'
+    elif resource == '/add-app':
+        print('add')
+    elif resource == '/remove-app':
+        print('remove')
+    elif resource == '/get-clients-list':
+        uri = 'client_list.js'
+    elif resource == '/add-client':
+        print('add')
+    elif resource == '/remove-client':
+        print('remove')
     else:
         uri = DEFAULT_URL
     http_response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
@@ -275,6 +286,16 @@ def handle_client_request(resource, client_socket, req):
                 listi = DB.list_from_db(cursor, 'apps', 'name', id[0])
                 print(listi)
                 data = json.dumps(DB.list_to_list(cursor, listi, 'apps')).encode()
+                cursor.close()
+                print(data)
+            elif uri == 'client_list.js' and g == True:
+                print('got')
+                cursor = DB.create_cursor()
+                id = DB.get_id(cursor,'admins', username)
+                print(id)
+                listi = DB.list_from_db(cursor, 'clients', 'name', id[0])
+                print(listi)
+                data = json.dumps(DB.list_to_list(cursor, listi, 'clients')).encode()
                 cursor.close()
                 print(data)
             else:

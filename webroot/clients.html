@@ -2,60 +2,131 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Clients</title>
+  <title>Clients List</title>
   <style>
-    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
-    header { background: #4CAF50; color: white; padding: 1rem; text-align: center; }
-    #list-container {
-      display: flex; flex-direction: column; align-items: center;
-      padding: 2rem;
+    /* Base styles */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
     }
-    ul { list-style: none; padding: 0; width: 80%; max-width: 600px; }
-    li {
-      background: #f9f9f9; margin: .5rem 0; padding: 1rem;
-      border-radius: .5rem; box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    header {
+      background: #4CAF50;
+      color: white;
+      padding: 1rem;
+      text-align: center;
     }
-    footer { text-align: center; margin: 2rem; }
-    button {
-      background: #4CAF50; color: white; border: none;
-      padding: .75rem 1.5rem; border-radius: .5rem; cursor: pointer;
+    main {
+      flex: 1; padding: 2rem;
+    }
+    #clients-list {
+      list-style: none;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    #clients-list li {
+      background: white;
+      margin-bottom: 1rem;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      font-size: 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .remove-btn {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .remove-btn:hover {
+      background: #c53030;
+    }
+    footer {
+      background: #fff;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+    }
+    footer button {
+      background: #2f855a;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      margin: 0 0.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 1rem;
+    }
+    .add-btn {
+      background: #3182ce;
+    }
+    footer button:hover {
+      opacity: 0.9;
     }
   </style>
 </head>
 <body>
   <header><h1>Connected Clients</h1></header>
-
-  <div id="list-container">
-    <ul id="clients-list">
-      <!-- dynamic items go here -->
-    </ul>
-  </div>
-
+  <main>
+    <ul id="clients-list"></ul>
+  </main>
   <footer>
-    <button onclick="window.location.href='home.html'">Home</button>
+    <button onclick="window.location.href='/'">Home</button>
+    <button class="add-btn" onclick="window.location.href='/add-app'">Add App</button>
   </footer>
 
   <script>
-    async function fetchClients() {
-      try {
-        const res = await fetch('/api/clients');          // :contentReference[oaicite:0]{index=0}
-        if (!res.ok) throw new Error(res.statusText);
-        const clients = await res.json();
-        const ul = document.getElementById('clients-list');
-        ul.innerHTML = '';
-        clients.forEach(c => {
+    const clientsListEl = document.getElementById('clients-list');
+
+    // Load and render the clients, sending username from localStorage
+    function loadClients() {
+      const username = localStorage.getItem('username');          // get stored username :contentReference[oaicite:0]{index=0}
+
+      fetch('/get-clients-list', {                                   // POST with JSON body :contentReference[oaicite:1]{index=1}
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username })                      // serialize to JSON :contentReference[oaicite:2]{index=2}
+      })
+      .then(res => res.json())
+      .then(data => {
+        clientsListEl.innerHTML = '';
+        data.forEach(item => {
           const li = document.createElement('li');
-          li.textContent = `${c.name} (ID: ${c.id})`;
-          ul.appendChild(li);
+          li.innerHTML = `
+            <span>${item.name}</span>
+            <button class="remove-btn" name="action" data-id="${item.id}">Remove</button>
+          `;
+          clientsListEl.appendChild(li);
         });
-      } catch (err) {
-        console.error('Failed to load clients:', err);
-      }
+      })
+      .catch(console.error);
     }
 
-    // Initial load & refresh every 5 seconds
-    fetchClients();                                        // :contentReference[oaicite:1]{index=1}
-    setInterval(fetchClients, 5000);
+    // Delegate remove clicks (unchanged)
+    clientsListEl.addEventListener('click', e => {
+      if (e.target.matches('.remove-btn')) {
+        const id = e.target.dataset.id;
+        fetch('/remove-client', {
+          method: 'POST',
+          headers: { 'Content-Type':'application/json' },
+          body: JSON.stringify({ id })
+        })
+        .then(res => res.ok ? loadClients() : alert('Failed to remove'))
+        .catch(console.error);
+      }
+    });
+
+    // Initial load
+    document.addEventListener('DOMContentLoaded', loadClients);
   </script>
 </body>
 </html>

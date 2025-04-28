@@ -148,7 +148,7 @@ async def update(sid, list):
 async def connect(sid, environ):
     print(f"{sid} connected")
     time.sleep(1)
-    my=Admin.connect()
+    # my=Admin.connect()
     await update(sid, "chrome")
 
 

@@ -103,7 +103,7 @@
           const li = document.createElement('li');
           li.innerHTML = `
             <span>${item.name}</span>
-            <button class="remove-btn" data-id="${item.id}">Remove</button>
+            <button class="remove-btn" name="action" data-id="${item.id}">Remove</button>
           `;
           appsListEl.appendChild(li);
         });
