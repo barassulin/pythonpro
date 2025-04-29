@@ -45,8 +45,8 @@ class Database:
         finally:
             if self.connection.is_connected():
                 cursor.close()
-                self.connection.close()
-            print("MySQL connection is closed")
+                # self.connection.close()
+            # print("MySQL connection is closed")
 
         """
     def add_to_db(self, cursor, table_name, values):

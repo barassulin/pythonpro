@@ -54,6 +54,9 @@
       padding: 1rem;
       text-align: center;
       box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     footer button {
       background: #2f855a;
@@ -61,7 +64,7 @@
       border: none;
       padding: 0.75rem 1.5rem;
       border-radius: 6px;
-      margin: 0 0.5rem;
+      margin: 0.5rem;
       cursor: pointer;
       transition: background 0.2s;
       font-size: 1rem;
@@ -72,6 +75,19 @@
     footer button:hover {
       opacity: 0.9;
     }
+    #add-client-form {
+      margin-top: 1rem;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    #add-client-form input {
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      width: 200px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
@@ -81,20 +97,26 @@
   </main>
   <footer>
     <button onclick="window.location.href='/'">Home</button>
-    <button class="add-btn" onclick="window.location.href='/add-app'">Add App</button>
+    <button class="add-btn" onclick="showAddClientForm()">Add Client</button>
+
+    <div id="add-client-form">
+      <input type="text" id="new-client-name" placeholder="Enter client name" />
+      <button onclick="addClient()">Submit</button>
+    </div>
   </footer>
 
   <script>
     const clientsListEl = document.getElementById('clients-list');
+    const addClientForm = document.getElementById('add-client-form');
+    const newClientNameInput = document.getElementById('new-client-name');
 
-    // Load and render the clients, sending username from localStorage
     function loadClients() {
-      const username = localStorage.getItem('username');          // get stored username :contentReference[oaicite:0]{index=0}
+      const username = localStorage.getItem('username');
 
-      fetch('/get-clients-list', {                                   // POST with JSON body :contentReference[oaicite:1]{index=1}
+      fetch('/get-clients-list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username })                      // serialize to JSON :contentReference[oaicite:2]{index=2}
+        body: JSON.stringify({ username })
       })
       .then(res => res.json())
       .then(data => {
@@ -111,7 +133,6 @@
       .catch(console.error);
     }
 
-    // Delegate remove clicks (unchanged)
     clientsListEl.addEventListener('click', e => {
       if (e.target.matches('.remove-btn')) {
         const id = e.target.dataset.id;
@@ -125,7 +146,34 @@
       }
     });
 
-    // Initial load
+    function showAddClientForm() {
+      addClientForm.style.display = 'flex';
+    }
+
+    function addClient() {
+      const clientName = newClientNameInput.value.trim();
+      if (!clientName) {
+        alert('Please enter a client name');
+        return;
+      }
+      const username = localStorage.getItem('username');
+      fetch('/add-client', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, name: clientName })
+      })
+      .then(res => {
+        if (res.ok) {
+          loadClients();
+          addClientForm.style.display = 'none';
+          newClientNameInput.value = '';
+        } else {
+          alert('Failed to add client');
+        }
+      })
+      .catch(console.error);
+    }
+
     document.addEventListener('DOMContentLoaded', loadClients);
   </script>
 </body>

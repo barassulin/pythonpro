@@ -54,6 +54,9 @@
       padding: 1rem;
       text-align: center;
       box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
     }
     footer button {
       background: #2f855a;
@@ -61,7 +64,7 @@
       border: none;
       padding: 0.75rem 1.5rem;
       border-radius: 6px;
-      margin: 0 0.5rem;
+      margin: 0.5rem;
       cursor: pointer;
       transition: background 0.2s;
       font-size: 1rem;
@@ -72,6 +75,19 @@
     footer button:hover {
       opacity: 0.9;
     }
+    #add-app-form {
+      margin-top: 1rem;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    #add-app-form input {
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      width: 200px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
   </style>
 </head>
 <body>
@@ -81,20 +97,26 @@
   </main>
   <footer>
     <button onclick="window.location.href='/'">Home</button>
-    <button class="add-btn" onclick="window.location.href='/add-app'">Add App</button>
+    <button class="add-btn" onclick="showAddAppForm()">Add App</button>
+
+    <div id="add-app-form">
+      <input type="text" id="new-app-name" placeholder="Enter app name" />
+      <button onclick="addApp()">Submit</button>
+    </div>
   </footer>
 
   <script>
     const appsListEl = document.getElementById('apps-list');
+    const addAppForm = document.getElementById('add-app-form');
+    const newAppNameInput = document.getElementById('new-app-name');
 
-    // Load and render the apps, sending username from localStorage
     function loadApps() {
-      const username = localStorage.getItem('username');          // get stored username :contentReference[oaicite:0]{index=0}
+      const username = localStorage.getItem('username');
 
-      fetch('/get-apps-list', {                                   // POST with JSON body :contentReference[oaicite:1]{index=1}
+      fetch('/get-apps-list', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username })                        // serialize to JSON :contentReference[oaicite:2]{index=2}
+        body: JSON.stringify({ username })
       })
       .then(res => res.json())
       .then(data => {
@@ -111,7 +133,6 @@
       .catch(console.error);
     }
 
-    // Delegate remove clicks (unchanged)
     appsListEl.addEventListener('click', e => {
       if (e.target.matches('.remove-btn')) {
         const id = e.target.dataset.id;
@@ -125,7 +146,34 @@
       }
     });
 
-    // Initial load
+    function showAddAppForm() {
+      addAppForm.style.display = 'flex';
+    }
+
+    function addApp() {
+      const appName = newAppNameInput.value.trim();
+      if (!appName) {
+        alert('Please enter an app name');
+        return;
+      }
+      const username = localStorage.getItem('username');
+      fetch('/add-app', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, name: appName })
+      })
+      .then(res => {
+        if (res.ok) {
+          loadApps();
+          addAppForm.style.display = 'none';
+          newAppNameInput.value = '';
+        } else {
+          alert('Failed to add app');
+        }
+      })
+      .catch(console.error);
+    }
+
     document.addEventListener('DOMContentLoaded', loadApps);
   </script>
 </body>

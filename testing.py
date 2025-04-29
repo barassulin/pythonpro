@@ -177,6 +177,7 @@ def identification_for_clients(client_socket ,name, password, admins_id):
 def admin_sign_up(name, password):
     print("signingup")
     cursor = DB.create_cursor()
+    print(name, password)
     return str(DB.add_to_db(cursor, (name, password), "admins"))
 
 
@@ -200,6 +201,22 @@ def handling_req(parts_req):
     return ans
 
 
+def add_app(app, name):
+    try:
+        cursor = DB.create_cursor()
+        id = DB.get_id(cursor, 'admins', name)[0][0]
+        app = app[0]
+        print(app, id)
+
+        # return str(DB.add_to_db(cursor, (name, password), "admins"))
+
+        m = DB.add_to_db(cursor, (app, id), "apps")
+    except Exception as err:
+        print(err)
+        m = False
+    finally:
+        return m
+
 def handle_client_request(resource, client_socket, req):
     """
     Check the required resource, generate proper HTTP response and send
@@ -210,10 +227,11 @@ def handle_client_request(resource, client_socket, req):
     """
     print("handling")
     print(resource)
-    g = False
-    if not g:
-        g, username = find_name(req)
-        print('g', g)
+
+    g, username = find_username(req)
+    d, name = find_name(req)
+
+    print('g', g)
     if resource == '/':
         uri = DEFAULT_URL
     elif resource == "/login":
@@ -247,13 +265,18 @@ def handle_client_request(resource, client_socket, req):
     elif resource == '/get-apps-list':
         uri = 'app_list.js'
     elif resource == '/add-app':
-        print('add')
+        print('name', name)
+
+        if add_app(name, username):
+            uri = "/apps.html"
+        else:
+            uri = "/forbidden"
     elif resource == '/remove-app':
         print('remove')
     elif resource == '/get-clients-list':
         uri = 'client_list.js'
     elif resource == '/add-client':
-        print('add')
+        print('name', name)
     elif resource == '/remove-client':
         print('remove')
     else:
@@ -342,14 +365,25 @@ def find_name_pass(request):
     return False, None, None, None
 
 
-def find_name(request):
+def find_username(request):
 
-    pattern = r"{\"username\":\"(.*)\"}"
+    pattern = r"{\"username\":\"(.*?)\""
     m = re.search(pattern, request)
     if m:
         username = m.groups()
         print(username)
         return True, username
+
+    return False, None
+
+
+def find_name(req):
+    pattern = r"\"name\":\"(.*)\""
+    m = re.search(pattern, req)
+    if m:
+        name = m.groups()
+        print(name)
+        return True, name
 
     return False, None
 def find_action(request):
