@@ -136,10 +136,11 @@
     appsListEl.addEventListener('click', e => {
       if (e.target.matches('.remove-btn')) {
         const id = e.target.dataset.id;
+        const username = localStorage.getItem('username');
         fetch('/remove-app', {
           method: 'POST',
           headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ id })
+          body: JSON.stringify({ username ,info:id })
         })
         .then(res => res.ok ? loadApps() : alert('Failed to remove'))
         .catch(console.error);
@@ -160,7 +161,7 @@
       fetch('/add-app', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, name: appName })
+        body: JSON.stringify({ username, info: appName })
       })
       .then(res => {
         if (res.ok) {

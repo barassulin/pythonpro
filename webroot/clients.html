@@ -101,6 +101,7 @@
 
     <div id="add-client-form">
       <input type="text" id="new-client-name" placeholder="Enter client name" />
+      <input type="password" id="new-client-pass" placeholder="Enter client password" />
       <button onclick="addClient()">Submit</button>
     </div>
   </footer>
@@ -109,6 +110,7 @@
     const clientsListEl = document.getElementById('clients-list');
     const addClientForm = document.getElementById('add-client-form');
     const newClientNameInput = document.getElementById('new-client-name');
+    const newClientPassInput = document.getElementById('new-client-pass');
 
     function loadClients() {
       const username = localStorage.getItem('username');
@@ -125,7 +127,7 @@
           const li = document.createElement('li');
           li.innerHTML = `
             <span>${item.name}</span>
-            <button class="remove-btn" name="action" data-id="${item.id}">Remove</button>
+            <button class="remove-btn" data-id="${item.id}">Remove</button>
           `;
           clientsListEl.appendChild(li);
         });
@@ -136,10 +138,12 @@
     clientsListEl.addEventListener('click', e => {
       if (e.target.matches('.remove-btn')) {
         const id = e.target.dataset.id;
+        const username = localStorage.getItem('username');
+
         fetch('/remove-client', {
           method: 'POST',
           headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ id })
+          body: JSON.stringify({ username, info: name/id })
         })
         .then(res => res.ok ? loadClients() : alert('Failed to remove'))
         .catch(console.error);
@@ -152,21 +156,28 @@
 
     function addClient() {
       const clientName = newClientNameInput.value.trim();
+      const clientPass = newClientPassInput.value.trim();
+
       if (!clientName) {
         alert('Please enter a client name');
+        return;
+      }
+      if (!clientPass) {
+        alert('Please enter a client password');
         return;
       }
       const username = localStorage.getItem('username');
       fetch('/add-client', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, name: clientName })
+        body: JSON.stringify({ username, info: clientName, pass: clientPass })
       })
       .then(res => {
         if (res.ok) {
           loadClients();
           addClientForm.style.display = 'none';
           newClientNameInput.value = '';
+          newClientPassInput.value = '';
         } else {
           alert('Failed to add client');
         }

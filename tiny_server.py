@@ -8,6 +8,7 @@ apps_list = [
     {"id": 4, "name": "spotify2"},
 ]
 
+
 class SimpleHandler(BaseHTTPRequestHandler):
     def do_GET(self):
         # 1) JSON list endpoint

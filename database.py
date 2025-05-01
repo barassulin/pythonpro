@@ -31,7 +31,7 @@ class Database:
                                                (name, admins_id) VALUES (%s,%s)"""
         elif table == 'clients':
             sql_insert_query = """ INSERT INTO clients
-                                               (name, c_password, admins_id) VALUES (%s,%s)"""
+                                               (name, c_password, admins_id) VALUES (%s,%s,%s)"""
         else:
             return 'False'
         try:
@@ -99,14 +99,14 @@ class Database:
         return myresult
 
     def remove_from_db(self, cursor, table_name, tuple):
-        sql = f"""DELETE FROM \'{table_name}\' WHERE id=%s"""
+        sql = f"""DELETE FROM {table_name} WHERE id=%s"""
 
         try:
             cursor.execute(sql, tuple)
             self.connection.commit()
             return True
         except Exception as e:
-            # log
+            print(e)
             return False
 
     """

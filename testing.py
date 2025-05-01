@@ -200,17 +200,31 @@ def handling_req(parts_req):
         print(err)
     return ans
 
-
-def add_app(app, name):
+def add_client(name, passi, username):
     try:
         cursor = DB.create_cursor()
-        id = DB.get_id(cursor, 'admins', name)[0][0]
-        app = app[0]
-        print(app, id)
+        id = DB.get_id(cursor, 'admins', username)[0][0]
+        name = name[0]
+        print(name, id)
 
         # return str(DB.add_to_db(cursor, (name, password), "admins"))
+        m = DB.add_to_db(cursor, (name,passi, id), "clients")
 
-        m = DB.add_to_db(cursor, (app, id), "apps")
+    except Exception as err:
+        print(err)
+        m = False
+    finally:
+        return m
+def add_app(name, username):
+    try:
+        cursor = DB.create_cursor()
+        id = DB.get_id(cursor, 'admins', username)[0][0]
+        name = name[0]
+        print(name, id)
+
+        # return str(DB.add_to_db(cursor, (name, password), "admins"))
+        m = DB.add_to_db(cursor, (name, id), "apps")
+
     except Exception as err:
         print(err)
         m = False
@@ -229,7 +243,8 @@ def handle_client_request(resource, client_socket, req):
     print(resource)
 
     g, username = find_username(req)
-    d, name = find_name(req)
+    d, info = find_info(req)
+#    {"id": "4"}
 
     print('g', g)
     if resource == '/':
@@ -265,20 +280,43 @@ def handle_client_request(resource, client_socket, req):
     elif resource == '/get-apps-list':
         uri = 'app_list.js'
     elif resource == '/add-app':
-        print('name', name)
-
-        if add_app(name, username):
+        print('name', info)
+        print (' here')
+        if add_app(info, username, 'apps'):
             uri = "/apps.html"
         else:
             uri = "/forbidden"
     elif resource == '/remove-app':
         print('remove')
+        cursor = DB.create_cursor()
+        print(info)
+        info = (int(info[0]),)
+        print(info)
+        if DB.remove_from_db(cursor, 'apps', info):
+            uri = "/apps.html"
+        else:
+            uri = "/forbidden"
+        cursor.close()
     elif resource == '/get-clients-list':
         uri = 'client_list.js'
     elif resource == '/add-client':
-        print('name', name)
+        print('name', info)
+
+        if add_client(info, username, 'clients'):
+            uri = "/clients.html"
+        else:
+            uri = "/forbidden"
     elif resource == '/remove-client':
         print('remove')
+        cursor = DB.create_cursor()
+        print(info)
+        info = (int(info[0]),)
+        print(info)
+        if DB.remove_from_db(cursor, 'clients', info):
+            uri = "/clients.html"
+        else:
+            uri = "/forbidden"
+        cursor.close()
     else:
         uri = DEFAULT_URL
     http_response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
@@ -377,8 +415,9 @@ def find_username(request):
     return False, None
 
 
-def find_name(req):
-    pattern = r"\"name\":\"(.*)\""
+
+def find_info(req):
+    pattern = r"\"info\":\"(.*)\""
     m = re.search(pattern, req)
     if m:
         name = m.groups()
