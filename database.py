@@ -23,6 +23,7 @@ class Database:
         return cursor
 
     def add_to_db(self, cursor, tuple, table):
+        print('prob')
         if table == 'admins' :
             sql_insert_query = """ INSERT INTO admins
                                    (name, a_password) VALUES (%s,%s)"""
@@ -30,8 +31,10 @@ class Database:
             sql_insert_query = """ INSERT INTO apps
                                                (name, admins_id) VALUES (%s,%s)"""
         elif table == 'clients':
+            print('worked')
             sql_insert_query = """ INSERT INTO clients
                                                (name, c_password, admins_id) VALUES (%s,%s,%s)"""
+            print('didnt')
         else:
             return 'False'
         try:

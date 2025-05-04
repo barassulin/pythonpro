@@ -143,7 +143,7 @@
         fetch('/remove-client', {
           method: 'POST',
           headers: { 'Content-Type':'application/json' },
-          body: JSON.stringify({ username, info: name/id })
+          body: JSON.stringify({ username, info: id })
         })
         .then(res => res.ok ? loadClients() : alert('Failed to remove'))
         .catch(console.error);
@@ -170,7 +170,7 @@
       fetch('/add-client', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, info: clientName, pass: clientPass })
+        body: JSON.stringify({ username, info: clientName, password: clientPass })
       })
       .then(res => {
         if (res.ok) {

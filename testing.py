@@ -204,11 +204,11 @@ def add_client(name, passi, username):
     try:
         cursor = DB.create_cursor()
         id = DB.get_id(cursor, 'admins', username)[0][0]
-        name = name[0]
+
         print(name, id)
 
         # return str(DB.add_to_db(cursor, (name, password), "admins"))
-        m = DB.add_to_db(cursor, (name,passi, id), "clients")
+        m = DB.add_to_db(cursor, (name, passi, id), "clients")
 
     except Exception as err:
         print(err)
@@ -247,6 +247,7 @@ def handle_client_request(resource, client_socket, req):
 #    {"id": "4"}
 
     print('g', g)
+    cursor = DB.create_cursor()
     if resource == '/':
         uri = DEFAULT_URL
     elif resource == "/login":
@@ -288,7 +289,6 @@ def handle_client_request(resource, client_socket, req):
             uri = "/forbidden"
     elif resource == '/remove-app':
         print('remove')
-        cursor = DB.create_cursor()
         print(info)
         info = (int(info[0]),)
         print(info)
@@ -300,15 +300,16 @@ def handle_client_request(resource, client_socket, req):
     elif resource == '/get-clients-list':
         uri = 'client_list.js'
     elif resource == '/add-client':
-        print('name', info)
-
-        if add_client(info, username, 'clients'):
+        name = info[0].split("\",\"password\":\"")[0]
+        print(name, " name")
+        passi = info[0].split("\",\"password\":\"")[1]
+        print(passi, " pass")
+        if add_client(name, passi, username):
             uri = "/clients.html"
         else:
             uri = "/forbidden"
     elif resource == '/remove-client':
         print('remove')
-        cursor = DB.create_cursor()
         print(info)
         info = (int(info[0]),)
         print(info)
