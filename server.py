@@ -18,6 +18,26 @@ import aiohttp
 import asyncio
 import protocol
 
+
+def connect():
+    print("started")
+    try:
+        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        client_socket.connect((SERVER_IP_CONNECT, SERVER_PORT_CONNECT))
+        return client_socket
+        print('G')
+    except Exception as err:
+        print(err)
+
+
+
+
+def disconnect(client_socket):
+    client_socket.close()
+
+
+SERVER_IP_CONNECT = '127.0.0.1'
+SERVER_PORT_CONNECT = 20003
 SERVER_IP = '0.0.0.0'
 SERVER_PORT = 20003
 CLIENTS_PORT = 20004
@@ -25,11 +45,9 @@ LISTEN_SIZE = 1
 DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
 # Create a new Socket.IO server
 sio = socketio.AsyncServer()
-my_socket = Admin.connect()
-
+my_socket = connect()
 # Create an aiohttp web application
 app = aiohttp.web.Application()
-
 # Attach the Socket.IO server to the aiohttp app
 sio.attach(app)
 
@@ -89,6 +107,7 @@ def identification_for_clients(name, password, sid):
     return worked
 """
 
+
 def identification_for_admins(name, password):
     name = str(name)
     worked = 'False'
@@ -130,13 +149,6 @@ def handling_req(req):
     return ans
 
 
-def recv(client_socket):
-    msg = protocol.recv_protocol(client_socket)
-    return msg
-
-
-def send(client_socket, msg):
-    return protocol.send_protocol(msg, client_socket)
 
 
 @sio.event
@@ -149,7 +161,7 @@ async def update(sid, list):
 async def connect(sid, environ):
     print(f"{sid} connected")
     time.sleep(1)
-    # my=Admin.connect()
+    # my=connect()
     await update(sid, "chrome")
 
 
@@ -159,12 +171,13 @@ async def identify(sid, data):
     # dummy check
     # data protocol with ' '
     # cursor = DB.create_cursor()
-    Admin.send(my_socket, f"client_idedtify {data.lower()}")
-    if Admin.recv(my_socket) == 'True':
-        print('tl')
+    protocol.send_protocol( f"client_idedtify {data.lower()} {sid}", my_socket)
+    msg = protocol.recv_protocol(my_socket)
+    if msg == 'False':
+        await disconnect(sid)
     else:
-        print("fl")
-        # await disconnect(sid)
+        await update(sid, msg)
+
     """
     if not identification_for_clients(cursor, name, passi):
         disconnect(sid)
@@ -209,8 +222,10 @@ def accept_connections(server_socket):
 
 def recv_res():
     while True:
-        res = protocol.recv_protocol(my_socket)
+        print(my_socket)
+        res = my_socket.recv(4096)
         print(res)
+
 
 def start_server():
     """Start the server listening on two ports."""
@@ -249,6 +264,7 @@ def start_server():
     while True:
         pass
 
+
 def identify2(data):
     print(f"Got: {data}")
     # dummy check
@@ -257,12 +273,13 @@ def identify2(data):
     """name = data.split()[0]
     passi = data.split()[1]
     ws_pass = data.split()[2]"""
-    my_socket = Admin.connect()
-    Admin.send(my_socket, f"client_idedtify {data}")
-    if Admin.recv(my_socket) == 'True':
+    protocol.send_protocol(f"client_idedtify {data}", my_socket)
+    if protocol.recv_protocol(my_socket) == 'True':
         print('tl')
     else:
         print("fl")
+
+
 def main():
     #print(get_list("APPS", "1"))
     #print((('bob',),)[0][0])

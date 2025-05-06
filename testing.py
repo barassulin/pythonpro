@@ -161,15 +161,17 @@ def identification_for_admins(name, password):
     return worked
 
 
-def identification_for_clients(name, password, admins_id):
+def identification_for_clients(name, password, admins_id, sid):
     name = str(name)
     worked = 'False'
     cursor = DB.create_cursor()
     passi = DB.password_from_db(cursor, 'clients', (name, admins_id))
     if password == passi:
         print("worked")
-        worked = DB.update_socket(cursor, (str(android_socket), name, password))
-        # worked = get_list("WORKSPACES", name) # of workspaces
+        worked = DB.update_sid(cursor, (sid, name, password))
+        if worked:
+            worked = get_list("WORKSPACES", name) # of workspaces
+    print(worked)
     cursor.close()
     return worked
 
@@ -220,6 +222,13 @@ def add_client(name, passi, username):
         return m
 
 
+def update(cursor, id):
+    sids = DB.list_from_db(cursor, 'clients', 'sid', id)
+    apps = DB.list_from_db(cursor, 'apps', 'name', id)
+    protocol.send_protocol([sids, apps], android_socket)
+    # protocol.send_protocol('[sids, apps]', android_socket)
+
+
 def add_app(name, username):
     try:
         cursor = DB.create_cursor()
@@ -230,7 +239,7 @@ def add_app(name, username):
         # return str(DB.add_to_db(cursor, (name, password), "admins"))
         m = DB.add_to_db(cursor, (name, id), "apps")
         if m:
-            protocol.send_protocol('add!' + name, android_socket)
+            update(cursor, (id,))
     except Exception as err:
         print(err)
         m = False
@@ -240,12 +249,13 @@ def add_app(name, username):
 
 def remove_app(id):
     try:
+        print(id)
         cursor = DB.create_cursor()
-        name = DB.get_name(cursor, 'apps', id)[0][0]
+        # name = DB.get_name(cursor, 'apps', id)[0][0]
         # return str(DB.add_to_db(cursor, (name, password), "admins"))
         m = DB.remove_from_db(cursor, 'apps', id)
         if m:
-            protocol.send_protocol('remove!' + name, android_socket)
+            update(cursor, id)
     except Exception as err:
         print(err)
         m = False
@@ -550,7 +560,8 @@ def handle_client_app():
         name = msg.split()[1]
         passi = msg.split()[2]
         ws_pass = msg.split()[3]
-        worked = identification_for_clients(name, passi, ws_pass)
+        sid = msg.split()[4]
+        worked = identification_for_clients(name, passi, ws_pass, sid)
         protocol.send_protocol(worked, android_socket)
     else:
         protocol.send_protocol("False", android_socket)

@@ -45,9 +45,9 @@ class Database:
         except mysql.connector.Error as error:
             print("parameterized query failed {}".format(error))
             return 'False'
-        finally:
-            if self.connection.is_connected():
-                cursor.close()
+        # finally:
+            # if self.connection.is_connected():
+                # cursor.close()
                 # self.connection.close()
             # print("MySQL connection is closed")
 
@@ -98,7 +98,7 @@ class Database:
         elif table_name=='clients' and row == 'name':
             sql = f"SELECT name FROM clients WHERE admins_id=%s"
         elif table_name == 'clients' and row == 'socket':
-            sql = f"SELECT socket FROM clients WHERE admins_id=%s"
+            sql = f"SELECT sid FROM clients WHERE admins_id=%s"
         else:
             return 'False'
         cursor.execute(sql, value)
@@ -141,7 +141,7 @@ class Database:
         return myresult
     """
 
-    def update_socket(self, cursor, values):
+    def update_sid(self, cursor, values):
         try:
             sql = f"UPDATE clients SET socket=%s WHERE name=%s and c_password=%s"
             cursor.execute(sql, values)
