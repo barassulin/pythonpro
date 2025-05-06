@@ -84,7 +84,7 @@ REDIRECTION_DICTIONARY = {"/moved": "/"
                           """
                           }
 
-
+global android_socket, android_address
 #LOG_FORMAT = '%(levelname)s | %(asctime)s | %(processName)s | %(message)s'
 #LOG_LEVEL = logging.DEBUG
 #LOG_FILE = LOG_DIR + '/server.log'
@@ -161,14 +161,14 @@ def identification_for_admins(name, password):
     return worked
 
 
-def identification_for_clients(client_socket ,name, password, admins_id):
+def identification_for_clients(name, password, admins_id):
     name = str(name)
     worked = 'False'
     cursor = DB.create_cursor()
     passi = DB.password_from_db(cursor, 'clients', (name, admins_id))
     if password == passi:
         print("worked")
-        worked = DB.update_socket(cursor, (str(client_socket), name, password))
+        worked = DB.update_socket(cursor, (str(android_socket), name, password))
         # worked = get_list("WORKSPACES", name) # of workspaces
     cursor.close()
     return worked
@@ -200,6 +200,8 @@ def handling_req(parts_req):
         print(err)
     return ans
 
+
+
 def add_client(name, passi, username):
     try:
         cursor = DB.create_cursor()
@@ -209,12 +211,15 @@ def add_client(name, passi, username):
 
         # return str(DB.add_to_db(cursor, (name, password), "admins"))
         m = DB.add_to_db(cursor, (name, passi, id), "clients")
+        # if m is True:
 
     except Exception as err:
         print(err)
         m = False
     finally:
         return m
+
+
 def add_app(name, username):
     try:
         cursor = DB.create_cursor()
@@ -224,12 +229,29 @@ def add_app(name, username):
 
         # return str(DB.add_to_db(cursor, (name, password), "admins"))
         m = DB.add_to_db(cursor, (name, id), "apps")
-
+        if m:
+            protocol.send_protocol('add!' + name, android_socket)
     except Exception as err:
         print(err)
         m = False
     finally:
         return m
+
+
+def remove_app(id):
+    try:
+        cursor = DB.create_cursor()
+        name = DB.get_name(cursor, 'apps', id)[0][0]
+        # return str(DB.add_to_db(cursor, (name, password), "admins"))
+        m = DB.remove_from_db(cursor, 'apps', id)
+        if m:
+            protocol.send_protocol('remove!' + name, android_socket)
+    except Exception as err:
+        print(err)
+        m = False
+    finally:
+        return m
+
 
 def handle_client_request(resource, client_socket, req):
     """
@@ -283,16 +305,13 @@ def handle_client_request(resource, client_socket, req):
     elif resource == '/add-app':
         print('name', info)
         print (' here')
-        if add_app(info, username, 'apps'):
+        if add_app(info, username):
             uri = "/apps.html"
         else:
             uri = "/forbidden"
     elif resource == '/remove-app':
-        print('remove')
-        print(info)
         info = (int(info[0]),)
-        print(info)
-        if DB.remove_from_db(cursor, 'apps', info):
+        if remove_app(info):
             uri = "/apps.html"
         else:
             uri = "/forbidden"
@@ -523,18 +542,18 @@ def ident_client(admins_id):
     get_list("apps", admins_id)
 
 
-def handle_client_app(client_socket):
-    msg = protocol.recv_protocol(client_socket)
+def handle_client_app():
+    msg = protocol.recv_protocol(android_socket)
     print(msg.split())
     func = msg.split()[0]
     if func == "client_idedtify":
         name = msg.split()[1]
         passi = msg.split()[2]
         ws_pass = msg.split()[3]
-        worked = identification_for_clients(client_socket, name, passi, ws_pass)
-        protocol.send_protocol(worked, client_socket)
+        worked = identification_for_clients(name, passi, ws_pass)
+        protocol.send_protocol(worked, android_socket)
     else:
-        protocol.send_protocol("False", client_socket)
+        protocol.send_protocol("False", android_socket)
 
 
 def connections_admin(socket):
@@ -552,19 +571,14 @@ def connections_admin(socket):
         server_thread.start()
 
 
-def connections_apps(socket):
+def connections_apps(c_socket):
     """Accept connections from clients."""
-    while True:
-        client_socket, client_address = socket.accept()
-        print('New connection received from', client_address)
+    global android_socket, android_address
+    android_socket, android_address = c_socket.accept()
+    print('New connection received from', android_address)
 
-        # client_socket.settimeout(SOCKET_TIMEOUT)
-        server_thread = threading.Thread(
-            target=handle_client_app,
-            args=(client_socket,),
-        )
-        server_thread.daemon = True
-        server_thread.start()
+    # client_socket.settimeout(SOCKET_TIMEOUT)
+    handle_client_app()
 
 
 def main():

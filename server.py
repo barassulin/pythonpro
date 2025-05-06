@@ -25,6 +25,7 @@ LISTEN_SIZE = 1
 DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
 # Create a new Socket.IO server
 sio = socketio.AsyncServer()
+my_socket = Admin.connect()
 
 # Create an aiohttp web application
 app = aiohttp.web.Application()
@@ -158,7 +159,6 @@ async def identify(sid, data):
     # dummy check
     # data protocol with ' '
     # cursor = DB.create_cursor()
-    my_socket = Admin.connect()
     Admin.send(my_socket, f"client_idedtify {data.lower()}")
     if Admin.recv(my_socket) == 'True':
         print('tl')
@@ -207,6 +207,11 @@ def accept_connections(server_socket):
         client_thread.start()
 
 
+def recv_res():
+    while True:
+        res = protocol.recv_protocol(my_socket)
+        print(res)
+
 def start_server():
     """Start the server listening on two ports."""
     # Bind server socket to SERVER_PORT
@@ -230,6 +235,9 @@ def start_server():
     server_thread.daemon = True  # Allow threads to exit when the main program exits
     server_thread.start()
     '''
+    r = threading.Thread(target=recv_res, args=())
+    r.daemon = True  # Allow threads to exit when the main program exits
+    r.start()
     aiohttp.web.run_app(app, host=SERVER_IP, port=CLIENTS_PORT)
 
     """

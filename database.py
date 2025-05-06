@@ -85,6 +85,13 @@ class Database:
         print(myresult)
         return myresult
 
+    def get_name(self, cursor, table, value):
+        sql = f"""SELECT name FROM {table} WHERE id=%s"""
+        cursor.execute(sql, value)
+        myresult = cursor.fetchall()
+        print(myresult)
+        return myresult
+
     def list_from_db(self, cursor, table_name, row, value):
         if table_name=='apps':
             sql = f"""SELECT name FROM apps WHERE admins_id=%s"""
