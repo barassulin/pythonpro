@@ -92,12 +92,20 @@ class Database:
         print(myresult)
         return myresult
 
+    def get_admins_id(self, cursor, table, value):
+        print(value)
+        sql = f"""SELECT admins_id FROM {table} WHERE id=%s"""
+        cursor.execute(sql, value)
+        myresult = cursor.fetchall()
+        print("my ", myresult)
+        return myresult
+
     def list_from_db(self, cursor, table_name, row, value):
         if table_name=='apps':
             sql = f"""SELECT name FROM apps WHERE admins_id=%s"""
         elif table_name=='clients' and row == 'name':
             sql = f"SELECT name FROM clients WHERE admins_id=%s"
-        elif table_name == 'clients' and row == 'socket':
+        elif table_name == 'clients' and row == 'sid':
             sql = f"SELECT sid FROM clients WHERE admins_id=%s"
         else:
             return 'False'

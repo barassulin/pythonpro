@@ -223,8 +223,12 @@ def add_client(name, passi, username):
 
 
 def update(cursor, id):
+    print('here')
+    print(id)
     sids = DB.list_from_db(cursor, 'clients', 'sid', id)
     apps = DB.list_from_db(cursor, 'apps', 'name', id)
+    print('sids: ', [sids])
+    print('apps: ', [apps])
     protocol.send_protocol([sids, apps], android_socket)
     # protocol.send_protocol('[sids, apps]', android_socket)
 
@@ -253,9 +257,11 @@ def remove_app(id):
         cursor = DB.create_cursor()
         # name = DB.get_name(cursor, 'apps', id)[0][0]
         # return str(DB.add_to_db(cursor, (name, password), "admins"))
+        a_id = DB.get_admins_id(cursor, 'apps', id)[0]
         m = DB.remove_from_db(cursor, 'apps', id)
         if m:
-            update(cursor, id)
+            print(a_id)
+            update(cursor, a_id)
     except Exception as err:
         print(err)
         m = False

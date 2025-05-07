@@ -250,6 +250,7 @@ def start_server():
     server_thread.daemon = True  # Allow threads to exit when the main program exits
     server_thread.start()
     '''
+
     r = threading.Thread(target=recv_res, args=())
     r.daemon = True  # Allow threads to exit when the main program exits
     r.start()
