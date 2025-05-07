@@ -107,35 +107,7 @@ def identification_for_clients(name, password, sid):
     return worked
 """
 
-
-def identification_for_admins(name, password):
-    name = str(name)
-    worked = 'False'
-    cursor = DB.create_cursor()
-    passi = DB.read_from_db(cursor, f'admins WHERE name=\'{name}\'', 'a_password')
-    if password == passi:
-        print("worked")
-        # worked = get_list("WORKSPACES", name) # of workspaces
-        worked = 'True'
-    cursor.close()
-    return worked
-
-
-def admin_sign_up(name, password):
-    print("signingup")
-    cursor = DB.create_cursor()
-    return str(DB.add_to_db(cursor, "admins(name,a_password)", f"\'{name}\', \'{password}\'"))
-
-
-FUNC_DICT = {"identification": identification_for_admins,
-                   "signup": admin_sign_up,
-                   "add_app": add_app_to_db,
-                   "remove_app": remove_from_db,
-                   "app_list": read_from_db,
-                   "clients_list": read_from_db
-                   }
-
-
+"""
 def handling_req(req):
     ans = "None"
     try:
@@ -146,15 +118,20 @@ def handling_req(req):
             print("ans", ans)
     except Exception as err:
         print(err)
-    return ans
+    return ans"""
 
 
 
 
 @sio.event
 async def update(sid, list):
-    await sio.emit("update", list, to=sid)
-
+    print("updating")
+    try:
+        # list = [1,2,3,4]
+        print(list)
+        await sio.emit("update", list, room=sid)
+    except Exception as err:
+        print(err)
 
 # Define event handlers for Socket.IO
 @sio.event
@@ -173,9 +150,12 @@ async def identify(sid, data):
     # cursor = DB.create_cursor()
     protocol.send_protocol( f"client_idedtify {data.lower()} {sid}", my_socket)
     msg = protocol.recv_protocol(my_socket)
+    print("msg: ", msg)
     if msg == 'False':
+        print("dis")
         await disconnect(sid)
     else:
+        print("up")
         await update(sid, msg)
 
     """
@@ -190,9 +170,9 @@ async def identify(sid, data):
 async def disconnect(sid):
     print(f"{sid} disconnected")
 
-
+"""
 def handle_client(client_socket, client_address, socket):
-    """Handles communication with the client."""
+    # Handles communication with the client.
     try:
         # my main
         print(f"Connection established with {client_address} on {socket}")
@@ -208,23 +188,24 @@ def handle_client(client_socket, client_address, socket):
         print(err)
     finally:
         client_socket.close()
+"""
 
-
-def accept_connections(server_socket):
-    """Accept and handle incoming client connections in separate threads."""
+"""def accept_connections(server_socket):
+    # Accept and handle incoming client connections in separate threads.
     while True:
         client_socket, client_address = server_socket.accept()
         # Start a new thread to handle the connection
         client_thread = threading.Thread(target=handle_client, args=(client_socket, client_address, server_socket))
         client_thread.daemon = True  # Allow threads to exit when the main program exits
         client_thread.start()
-
+"""
 
 def recv_res():
     while True:
-        print(my_socket)
-        res = my_socket.recv(4096)
-        print(res)
+        #print(my_socket)
+        #res = my_socket.recv(4096)
+        #print(res)
+        pass
 
 
 def start_server():

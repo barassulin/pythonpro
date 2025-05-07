@@ -170,7 +170,7 @@ def identification_for_clients(name, password, admins_id, sid):
         print("worked")
         worked = DB.update_sid(cursor, (sid, name, password))
         if worked:
-            worked = get_list("WORKSPACES", name) # of workspaces
+            worked = get_list("apps_list", (admins_id,)) # of workspaces
     print(worked)
     cursor.close()
     return worked
@@ -546,8 +546,8 @@ def get_list(func, id_admin):
         msg = DB.list_from_db(cursor, 'apps', 'name', id_admin)
     elif func == 'clients_list':
         msg = DB.list_from_db(cursor, 'clients', 'name', id_admin)
-    elif func == 'sockets_list':
-        msg = DB.list_from_db(cursor, 'clients', 'sockets', id_admin)
+    elif func == 'sids_list':
+        msg = DB.list_from_db(cursor, 'clients', 'sid', id_admin)
     else:
         return None
     cursor.close()

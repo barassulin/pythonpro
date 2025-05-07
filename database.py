@@ -151,7 +151,7 @@ class Database:
 
     def update_sid(self, cursor, values):
         try:
-            sql = f"UPDATE clients SET socket=%s WHERE name=%s and c_password=%s"
+            sql = f"UPDATE clients SET sid=%s WHERE name=%s and c_password=%s"
             cursor.execute(sql, values)
             self.connection.commit()
             return True
