@@ -170,7 +170,7 @@ def identification_for_clients(name, password, admins_id, sid):
         print("worked")
         worked = DB.update_sid(cursor, (sid, name, password))
         if worked:
-            worked = get_list("apps_list", (admins_id,)) # of workspaces
+            worked = ((sid,), get_list("apps_list", (admins_id,))) # of workspaces
     print(worked)
     cursor.close()
     return worked

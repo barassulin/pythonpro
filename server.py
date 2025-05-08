@@ -139,7 +139,7 @@ async def connect(sid, environ):
     print(f"{sid} connected")
     time.sleep(1)
     # my=connect()
-    await update(sid, "chrome")
+    # await update(sid, "chrome")
 
 
 @sio.event
@@ -149,14 +149,14 @@ async def identify(sid, data):
     # data protocol with ' '
     # cursor = DB.create_cursor()
     protocol.send_protocol( f"client_idedtify {data.lower()} {sid}", my_socket)
-    msg = protocol.recv_protocol(my_socket)
+    """msg = protocol.recv_protocol(my_socket)
     print("msg: ", msg)
     if msg == 'False':
         print("dis")
         await disconnect(sid)
     else:
         print("up")
-        await update(sid, msg)
+        await update(sid, msg)"""
 
     """
     if not identification_for_clients(cursor, name, passi):
@@ -200,13 +200,29 @@ def handle_client(client_socket, client_address, socket):
         client_thread.start()
 """
 
-def recv_res():
-    while True:
-        #print(my_socket)
-        #res = my_socket.recv(4096)
-        #print(res)
-        pass
 
+async def recv_res():
+    while True:
+        res = protocol.recv_protocol(my_socket)
+        print(res)
+        sids = res[0]
+        ans = res[1]
+
+        for sid in sids:
+            if ans == "False":
+                await disconnect(sid)
+            else:
+                print(sid)
+                print(ans)
+                await sio.emit("update", ans, room=sid)
+
+
+def between_callback():
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    loop.run_until_complete(recv_res())
+    loop.close()
 
 def start_server():
     """Start the server listening on two ports."""
@@ -232,7 +248,7 @@ def start_server():
     server_thread.start()
     '''
 
-    r = threading.Thread(target=recv_res, args=())
+    r = threading.Thread(target= between_callback, args=())
     r.daemon = True  # Allow threads to exit when the main program exits
     r.start()
     aiohttp.web.run_app(app, host=SERVER_IP, port=CLIENTS_PORT)
