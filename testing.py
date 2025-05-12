@@ -46,7 +46,7 @@ def identification(client_socket, name, password):
 
 """
 import threading
-
+import ssl
 import Admin
 import database
 DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
@@ -71,7 +71,8 @@ import protocol
 WEB_ROOT = "C:/serveriii/webroot"  # Adjust this to your web document root
 DEFAULT_URL = "/index.html"
 DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
-
+CERT_FILE = 'certificate.crt'
+KEY_FILE = 'privateKey.key'
 QUEUE_LEN = 1
 IP = '0.0.0.0'
 PORT = 8080
@@ -573,59 +574,93 @@ def handle_client_app():
         protocol.send_protocol("False", android_socket)
 
 
-def connections_admin(socket):
+def connections_admin(socket, context):
     """Accept connections from clients."""
     while True:
-        client_socket, client_address = socket.accept()
-        print('New connection received from', client_address)
+        try:
+            print("tryong")
+            client_socket, client_address = socket.accept()
+            #ssl_socket = context.wrap_socket(client_socket, server_side=True)
 
-        client_socket.settimeout(SOCKET_TIMEOUT)
-        server_thread = threading.Thread(
-            target=handle_client_admin,
-            args=(client_socket,),
-        )
-        server_thread.daemon = True
-        server_thread.start()
+
+
+            print('New connection received from', client_address, PORT)
+
+            socket.settimeout(SOCKET_TIMEOUT)
+            server_thread = threading.Thread(
+                target=handle_client_admin,
+                args=(client_socket,),
+            )
+            server_thread.daemon = True
+            server_thread.start()
+        except Exception as err:
+
+            print(err)
+            break
 
 
 def connections_apps(c_socket):
-    """Accept connections from clients."""
-    global android_socket, android_address
-    android_socket, android_address = c_socket.accept()
-    print('New connection received from', android_address)
+    try:
+        """Accept connections from clients."""
+        global android_socket, android_address
+        android_socket, android_address = c_socket.accept()
 
-    # client_socket.settimeout(SOCKET_TIMEOUT)
-    handle_client_app()
+        print('New connection received from', android_address, SERVER_PORT)
+
+        # client_socket.settimeout(SOCKET_TIMEOUT)
+        handle_client_app()
+    except Exception as err:
+        print(err)
 
 
 def main():
-    my_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    my_server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    my_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    my_server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    context.load_cert_chain(CERT_FILE, KEY_FILE)
+    context.check_hostname=False
+    context.verify_mode = ssl.CERT_NONE
+
     try:
-        my_socket.bind((IP, PORT))
-        my_socket.listen(QUEUE_LEN)
+
+        my_sock.bind((IP, PORT))
+        my_sock.listen(QUEUE_LEN)
+
+
         print(f"Listening for connections on port {PORT}")
 
-        my_server_socket.bind((IP, SERVER_PORT))
-        my_server_socket.listen(QUEUE_LEN)
+        my_server_sock.bind((IP, SERVER_PORT))
+        my_server_sock.listen(QUEUE_LEN)
+
         print(f"Listening for connections on port {SERVER_PORT}")
+
+        # Wrap the socket
 #         server_thread = threading.Thread(target=handle_client_admin, args=(my_socket,))
-        # Handle server connections in a thread
-        server_thread = threading.Thread(target=connections_admin, args=(my_socket,))
+
+        server_thread = threading.Thread(target=connections_admin, args=(my_sock, context))
         server_thread.daemon = True
         server_thread.start()
 
+
+        android_sock = context.wrap_socket(my_server_sock, server_side=True)
         # Handle client connections in a thread
-        client_thread = threading.Thread(target=connections_apps, args=(my_server_socket,))
-        client_thread.daemon = True
-        client_thread.start()
+        try:
+            client_thread = threading.Thread(target=connections_apps, args=(android_sock,))
+            client_thread.daemon = True
+            client_thread.start()
+        except Exception as err:
+            print(err)
         while True:
             pass
     except socket.error as err:
         logging.error("server socket error: " + str(err))
         print('Server socket exception:', err)
+    except Exception as err:
+        print(err)
     finally:
-        my_socket.close()
+        my_sock.close()
+        my_server_sock.close()
 
 
 

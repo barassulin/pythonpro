@@ -14,26 +14,29 @@ def send_protocol(message, sock):
       <FLAG><length><END_SIGN><payload bytes>
     """
     # Determine payload bytes and flag
-    if isinstance(message, (bytes, bytearray)):
-        flag = FLAG_TEXT
-        payload = bytes(message)
-    elif isinstance(message, str):
-        flag = FLAG_TEXT
-        payload = message.encode("utf-8")
-    else:
-        flag = FLAG_PICKLE
-        payload = pickle.dumps(message)
-
-    # Build header: length of payload as ASCII
-    length_str = str(len(payload)).encode("ascii")
-    packet = flag + length_str + END_SIGN + payload
-
     try:
-        sock.sendall(packet)
-        return True
-    except Exception as e:
-        print(f"[send_protocol] send error: {e!r}")
-        return False
+        if isinstance(message, (bytes, bytearray)):
+            flag = FLAG_TEXT
+            payload = bytes(message)
+        elif isinstance(message, str):
+            flag = FLAG_TEXT
+            payload = message.encode("utf-8")
+        else:
+            flag = FLAG_PICKLE
+            payload = pickle.dumps(message)
+
+        # Build header: length of payload as ASCII
+        length_str = str(len(payload)).encode("ascii")
+        packet = flag + length_str + END_SIGN + payload
+
+        try:
+            sock.sendall(packet)
+            return True
+        except Exception as e:
+            print(f"[send_protocol] send error: {e!r}")
+            return False
+    except Exception as err:
+        print(err)
 
 
 def recv_protocol(sock):
@@ -45,34 +48,37 @@ def recv_protocol(sock):
       4) Decode or unpickle based on the flag
     Returns: str or Python object
     """
-    # 1) flag
-    flag = sock.recv(1)
-    if not flag:
-        raise ConnectionError("Socket closed while reading flag")
+    try:
+        # 1) flag
+        flag = sock.recv(1)
+        if not flag:
+            raise ConnectionError("Socket closed while reading flag")
 
-    # 2) length prefix
-    length_bytes = bytearray()
-    while True:
-        b = sock.recv(1)
-        if not b:
-            raise ConnectionError("Socket closed while reading length")
-        if b == END_SIGN:
-            break
-        length_bytes.extend(b)
-    length = int(length_bytes.decode("ascii"))
+        # 2) length prefix
+        length_bytes = bytearray()
+        while True:
+            b = sock.recv(1)
+            if not b:
+                raise ConnectionError("Socket closed while reading length")
+            if b == END_SIGN:
+                break
+            length_bytes.extend(b)
+        length = int(length_bytes.decode("ascii"))
 
-    # 3) payload
-    payload = bytearray()
-    while len(payload) < length:
-        chunk = sock.recv(length - len(payload))
-        if not chunk:
-            raise ConnectionError("Socket closed during payload recv")
-        payload.extend(chunk)
+        # 3) payload
+        payload = bytearray()
+        while len(payload) < length:
+            chunk = sock.recv(length - len(payload))
+            if not chunk:
+                raise ConnectionError("Socket closed during payload recv")
+            payload.extend(chunk)
 
-    # 4) interpret
-    if flag == FLAG_TEXT:
-        return payload.decode("utf-8")
-    elif flag == FLAG_PICKLE:
-        return pickle.loads(bytes(payload))
-    else:
-        raise ValueError(f"Unknown flag byte: {flag!r}")
+        # 4) interpret
+        if flag == FLAG_TEXT:
+            return payload.decode("utf-8")
+        elif flag == FLAG_PICKLE:
+            return pickle.loads(bytes(payload))
+        else:
+            raise ValueError(f"Unknown flag byte: {flag!r}")
+    except Exception as err:
+        print(err)

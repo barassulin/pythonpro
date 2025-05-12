@@ -17,17 +17,26 @@ import socketio
 import aiohttp
 import asyncio
 import protocol
+import ssl
+
+CERT_FILE = 'certificate.crt'
 
 
 def connect():
     print("started")
     try:
-        client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        client_socket.connect((SERVER_IP_CONNECT, SERVER_PORT_CONNECT))
-        return client_socket
-        print('G')
+        context = ssl.create_default_context(ssl.Purpose.SERVER_AUTH)
+        #context.load_verify_locations(CERT_FILE)
+        context.check_hostname = False
+
+        context.verify_mode = ssl.CERT_NONE
+
+        raw = socket.create_connection((SERVER_IP_CONNECT, SERVER_PORT_CONNECT))
+        ssl_sock = context.wrap_socket(raw, server_hostname=SERVER_IP_CONNECT)
+        print("negotiated:", ssl_sock.version())
+        return ssl_sock
     except Exception as err:
-        print(err)
+        print("hhhh ",err)
 
 
 
