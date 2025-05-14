@@ -1,6 +1,7 @@
 import re
 
 import mysql.connector
+import hashlib
 
 
 class Database:
@@ -22,9 +23,10 @@ class Database:
         cursor = self.connection.cursor(prepared=True)
         return cursor
 
-    def add_to_db(self, cursor, tuple, table):
+    def add_to_db(self, cursor, tuplei, table):
         print('prob')
-        if table == 'admins' :
+        if table == 'admins':
+            tuplei = hash(tuplei[1])
             sql_insert_query = """ INSERT INTO admins
                                    (name, a_password) VALUES (%s,%s)"""
         elif table == 'apps':
@@ -32,13 +34,14 @@ class Database:
                                                (name, admins_id) VALUES (%s,%s)"""
         elif table == 'clients':
             print('worked')
+            tuplei = hash(tuplei[1])
             sql_insert_query = """ INSERT INTO clients
                                                (name, c_password, admins_id) VALUES (%s,%s,%s)"""
             print('didnt')
         else:
             return 'False'
         try:
-            cursor.execute(sql_insert_query, tuple)
+            cursor.execute(sql_insert_query, tuplei)
             self.connection.commit()
             print(f"Data inserted successfully into {table} table using the prepared statement")
             return 'True'
@@ -151,6 +154,7 @@ class Database:
 
     def update_sid(self, cursor, values):
         try:
+            values = hash(values[2])
             sql = f"UPDATE clients SET sid=%s WHERE name=%s and c_password=%s"
             cursor.execute(sql, values)
             self.connection.commit()

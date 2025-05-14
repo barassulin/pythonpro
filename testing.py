@@ -49,6 +49,7 @@ import threading
 import ssl
 import Admin
 import database
+import hashlib
 DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
 
 
@@ -154,7 +155,7 @@ def identification_for_admins(name, password):
     #uuid
     # ssl
     passi = DB.password_from_db(cursor, 'admins', (name,))
-    if password == passi:
+    if hash(password) == passi:
         print("worked")
         # worked = get_list("WORKSPACES", name) # of workspaces
         worked = 'True'
@@ -167,7 +168,7 @@ def identification_for_clients(name, password, admins_id, sid):
     worked = 'False'
     cursor = DB.create_cursor()
     passi = DB.password_from_db(cursor, 'clients', (name, admins_id))
-    if password == passi:
+    if hash(password) == passi:
         print("worked")
         worked = DB.update_sid(cursor, (sid, name, password))
         if worked:
@@ -574,13 +575,12 @@ def handle_client_app():
         protocol.send_protocol("False", android_socket)
 
 
-def connections_admin(socket, context):
+def connections_admin(socket):
     """Accept connections from clients."""
     while True:
         try:
             print("tryong")
             client_socket, client_address = socket.accept()
-            #ssl_socket = context.wrap_socket(client_socket, server_side=True)
 
 
 
@@ -619,8 +619,9 @@ def main():
 
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     context.load_cert_chain(CERT_FILE, KEY_FILE)
-    context.check_hostname=False
-    context.verify_mode = ssl.CERT_NONE
+
+    # context.check_hostname=False
+    # context.verify_mode = ssl.CERT_NONE
 
     try:
 
@@ -637,8 +638,9 @@ def main():
 
         # Wrap the socket
 #         server_thread = threading.Thread(target=handle_client_admin, args=(my_socket,))
+        ssl_socket = context.wrap_socket(my_sock, server_side=True)
 
-        server_thread = threading.Thread(target=connections_admin, args=(my_sock, context))
+        server_thread = threading.Thread(target=connections_admin, args=(ssl_socket,))
         server_thread.daemon = True
         server_thread.start()
 
@@ -650,14 +652,14 @@ def main():
             client_thread.daemon = True
             client_thread.start()
         except Exception as err:
-            print(err)
+            print('err2 ', err)
         while True:
             pass
     except socket.error as err:
         logging.error("server socket error: " + str(err))
         print('Server socket exception:', err)
     except Exception as err:
-        print(err)
+        print('err ',err)
     finally:
         my_sock.close()
         my_server_sock.close()
