@@ -26,7 +26,10 @@ class Database:
     def add_to_db(self, cursor, tuplei, table):
         print('prob')
         if table == 'admins':
-            tuplei = hash(tuplei[1])
+            print("database", tuplei[1])
+            tuplei = (tuplei[0], hash(tuplei[1]))
+            print("database", tuplei)
+
             sql_insert_query = """ INSERT INTO admins
                                    (name, a_password) VALUES (%s,%s)"""
         elif table == 'apps':

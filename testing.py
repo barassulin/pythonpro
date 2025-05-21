@@ -152,11 +152,19 @@ def identification_for_admins(name, password):
     name = str(name)
     worked = 'False'
     cursor = DB.create_cursor()
-    #uuid
+    # uuid
     # ssl
     passi = DB.password_from_db(cursor, 'admins', (name,))
-    if hash(password) == passi:
-        print("worked")
+    print(passi)
+    print("passiordi",password)
+    password = str(hash(password))
+    print(password)
+    print("pssswo", type(password))
+    print("pssi", type(passi))
+    # print("if", password == passi)
+
+    if password == passi:
+        print("hash worked")
         # worked = get_list("WORKSPACES", name) # of workspaces
         worked = 'True'
     cursor.close()
@@ -511,7 +519,10 @@ def handle_client_admin(client_socket):
             print(client_socket)
             client_request = client_socket.recv(1024).decode()
             while '\r\n\r\n' not in client_request:
-                client_request = client_request + client_socket.recv(1).decode()
+                cb = client_socket.recv(1)
+                if cb == b'':
+                    print('socket disconnected')
+                client_request = client_request + cb.decode()
                 print('trying')
 
             logging.debug("getting client request " + client_request)
@@ -596,7 +607,7 @@ def connections_admin(socket):
         except Exception as err:
 
             print(err)
-            break
+            # break
 
 
 def connections_apps(c_socket):
@@ -618,6 +629,8 @@ def main():
     my_server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    a_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    a_context.load_cert_chain(CERT_FILE, KEY_FILE)
     context.load_cert_chain(CERT_FILE, KEY_FILE)
 
     # context.check_hostname=False
@@ -645,7 +658,7 @@ def main():
         server_thread.start()
 
 
-        android_sock = context.wrap_socket(my_server_sock, server_side=True)
+        android_sock = a_context.wrap_socket(my_server_sock, server_side=True)
         # Handle client connections in a thread
         try:
             client_thread = threading.Thread(target=connections_apps, args=(android_sock,))
