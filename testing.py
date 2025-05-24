@@ -49,7 +49,9 @@ import threading
 import ssl
 import Admin
 import database
-import hashlib
+# import hashlib
+from argon2.low_level import hash_secret_raw, Type
+import binascii
 DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
 
 
@@ -79,12 +81,15 @@ IP = '0.0.0.0'
 PORT = 8080
 SERVER_PORT = 20003
 SOCKET_TIMEOUT = 2
+SALT = b"fixedsalt123456"  # 16 bytes for Argon2 salt
+
 REDIRECTION_DICTIONARY = {"/moved": "/"
                           """
                           "/admin": "/",
                           "/apps": "/"
                           """
                           }
+# Same parameters across all servers
 
 global android_socket, android_address
 #LOG_FORMAT = '%(levelname)s | %(asctime)s | %(processName)s | %(message)s'
@@ -101,6 +106,18 @@ apps_list = [
     {"id": 9, "name": "spotify"},
 ]
 
+
+def hashing(password):
+    hash_bytes = hash_secret_raw(
+        secret=password,
+        salt=SALT,
+        time_cost=2,
+        memory_cost=102400,
+        parallelism=8,
+        hash_len=32,
+        type=Type.I  # or Type.ID
+    )
+    return hash_bytes
 def get_file_data(file_name):
     """
     Get data from file
@@ -149,6 +166,7 @@ def db_connection(func, args):
 
 
 def identification_for_admins(name, password):
+    print("this started now")
     name = str(name)
     worked = 'False'
     cursor = DB.create_cursor()
@@ -157,7 +175,11 @@ def identification_for_admins(name, password):
     passi = DB.password_from_db(cursor, 'admins', (name,))
     print(passi)
     print("passiordi",password)
-    password = str(hash(password))
+    # print("1: ", hashing(b'KP'))
+    # print("1: ", hash('KP'))
+    password_hash_bytes = hashing(password.encode())  # Assuming returns bytes
+    password_hash_hex = binascii.hexlify(password_hash_bytes).decode()
+    password = str(password_hash_hex)
     print(password)
     print("pssswo", type(password))
     print("pssi", type(passi))
@@ -176,8 +198,12 @@ def identification_for_clients(name, password, admins_id, sid):
     worked = 'False'
     cursor = DB.create_cursor()
     passi = DB.password_from_db(cursor, 'clients', (name, admins_id))
-    if hash(password) == passi:
+
+    passwor = hashing(password.encode())
+    password = binascii.hexlify(passwor).decode()
+    if hashing(password) == passi:
         print("worked")
+
         worked = DB.update_sid(cursor, (sid, name, password))
         if worked:
             worked = ((sid,), get_list("apps_list", (admins_id,))) # of workspaces
@@ -187,11 +213,14 @@ def identification_for_clients(name, password, admins_id, sid):
 
 
 def admin_sign_up(name, password):
-    print("signingup")
+    print("signup")
     cursor = DB.create_cursor()
     print(name, password)
-    return str(DB.add_to_db(cursor, (name, password), "admins"))
-
+    passwor = hashing(password.encode())
+    password = binascii.hexlify(passwor).decode()
+    ans = str(DB.add_to_db(cursor, (name, password), "admins"))
+    print('admins', ans)
+    return ans
 
 FUNC_DICT = {
     "in": identification_for_admins,
@@ -203,13 +232,15 @@ FUNC_DICT = {
 def handling_req(parts_req):
     ans = "None"
     try:
+        print("started")
         func = parts_req[0]
         print(func)
         if func in FUNC_DICT:
+            print('yes')
             ans = FUNC_DICT[func](parts_req[1], parts_req[2])
             print("ans", ans)
     except Exception as err:
-        print(err)
+        print('hendling req', err)
     return ans
 
 
@@ -295,9 +326,13 @@ def handle_client_request(resource, client_socket, req):
 #    {"id": "4"}
 
     print('g', g)
+
     cursor = DB.create_cursor()
+    print('here closed')
     if resource == '/':
         uri = DEFAULT_URL
+    elif resource == '/home.html':
+        uri = "/home.html"
     elif resource == "/login":
         b, name, passw, func = find_name_pass(req)
         res = handling_req([func, name, passw])
@@ -522,6 +557,7 @@ def handle_client_admin(client_socket):
                 cb = client_socket.recv(1)
                 if cb == b'':
                     print('socket disconnected')
+                    # client_socket.close()
                 client_request = client_request + cb.decode()
                 print('trying')
 
