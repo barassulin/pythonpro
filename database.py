@@ -1,3 +1,8 @@
+"""
+    Bar Assulin ~ 24/5/2025
+    class for handling my sql database
+"""
+
 import mysql.connector
 
 
