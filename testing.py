@@ -347,7 +347,7 @@ def handle_client_request(resource, client_socket, req):
             uri = "/home.html"
 
         else:
-            uri = "/forbidden"
+            uri = "/incorrect.html"
     elif resource == "/pick":
         b, action = find_action(req)
         action = action[0]
@@ -359,7 +359,7 @@ def handle_client_request(resource, client_socket, req):
         elif b and action == 'apps':
             uri = "/apps.html"
         else:
-            uri = "/forbidden"
+            uri = "/incorrect.html"
         print("p")
     elif resource == '/get-apps-list':
         uri = 'app_list.js'
@@ -369,13 +369,13 @@ def handle_client_request(resource, client_socket, req):
         if add_app(info, username):
             uri = "/apps.html"
         else:
-            uri = "/forbidden"
+            uri = "/incorrect.html"
     elif resource == '/remove-app':
         info = (int(info[0]),)
         if remove_app(info):
             uri = "/apps.html"
         else:
-            uri = "/forbidden"
+            uri = "/incorrect.html"
         cursor.close()
     elif resource == '/get-clients-list':
         uri = 'client_list.js'
@@ -387,7 +387,7 @@ def handle_client_request(resource, client_socket, req):
         if add_client(name, passi, username):
             uri = "/clients.html"
         else:
-            uri = "/forbidden"
+            uri = "/incorrect.html"
     elif resource == '/remove-client':
         print('remove')
         print(info)
@@ -396,7 +396,7 @@ def handle_client_request(resource, client_socket, req):
         if DB.remove_from_db(cursor, 'clients', info):
             uri = "/clients.html"
         else:
-            uri = "/forbidden"
+            uri = "/incorrect.html"
         cursor.close()
     else:
         uri = DEFAULT_URL

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>incorrect</title>
+  <link rel="icon" href="data:,">
+
+  <style>
+    /* Base styles */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f4f8;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    header {
+      background: #800080;
+      color: white;
+      padding: 1rem;
+      text-align: center;
+    }
+    main {
+      flex: 1; padding: 2rem;
+    }
+    #apps-list {
+      list-style: none;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    #apps-list li {
+      background: white;
+      margin-bottom: 1rem;
+      padding: 1rem 1.5rem;
+      border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      font-size: 1.1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .remove-btn {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .remove-btn:hover {
+      background: #c53030;
+    }
+    footer {
+      background: #fff;
+      padding: 1rem;
+      text-align: center;
+      box-shadow: 0 -2px 5px rgba(0,0,0,0.1);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    footer button {
+      background: #800080;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 6px;
+      margin: 0.5rem;
+      cursor: pointer;
+      transition: background 0.2s;
+      font-size: 1rem;
+    }
+    .add-btn {
+      background: #3182ce;
+    }
+    footer button:hover {
+      opacity: 0.9;
+    }
+    #add-app-form {
+      margin-top: 1rem;
+      display: none;
+      flex-direction: column;
+      align-items: center;
+    }
+    #add-app-form input {
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      width: 200px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <header><h1>somthing went wrong</h1></header>
+  <main>
+  </main>
+  <footer>
+    <button onclick="window.location.href='/'">try again</button>
+  </footer>
+
+</body>
+</html>
