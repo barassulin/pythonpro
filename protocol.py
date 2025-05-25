@@ -1,9 +1,15 @@
+"""
+    Bar Assulin ~ 25/5/2025
+    protocol - for text, byts and objects
+"""
+
+
 import pickle
-import socket
 
 END_SIGN = b"#"
 FLAG_TEXT = b"T"
 FLAG_PICKLE = b"P"
+
 
 def send_protocol(message, sock):
     """

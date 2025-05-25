@@ -1,59 +1,3 @@
-"""
-def recv(client_socket):
-    msg = protocol.recv_protocol(client_socket)
-    return msg
-
-
-def send(client_socket, msg):
-    return protocol.send_protocol(msg, client_socket)
-
-async def add_app_to_db(sid, table_name, values):
-
-    send(client_socket, f"add_to_db{SIGN}{table_name}{SIGN}{values}")
-    apps_list = recv(client_socket)
-    await update(sid, apps_list)  # await because update is async
-
-
-
-def add_to_db(client_socket, table_name, values):
-    # check the info i recv
-    worked = False
-    cursor = DB.create_cursor()
-    if DB.add_to_db(cursor, table_name, values):
-        apps_list = get_list(cursor)
-        worked = True
-    cursor.close()
-    return worked
-
-
-
-
-server:
-def identification_for_clients(name, password, ws_pass):
-    cursor = DB.create_cursor()
-    if DB.client_idedtify(cursor, name, passi, ws_pass):
-        print('tl')
-    else:
-        print("fl")
-        # await disconnect(sid)
-
-web:
-
-def identification(client_socket, name, password):
-    # check the info i recv
-    send(client_socket, f"identification{SIGN}{name}{SIGN}{password}".encode())
-
-
-"""
-import threading
-import ssl
-import Admin
-import database
-# import hashlib
-from argon2.low_level import hash_secret_raw, Type
-import binascii
-DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
-
 
 """
 HTTP Server Shell
@@ -65,11 +9,19 @@ Usage: Fill the missing functions and constants
 Filled by: Bar Assulin
 """
 
+import threading
+import ssl
+import Admin
+import database
+# import hashlib
+from argon2.low_level import hash_secret_raw, Type
+import binascii
 import socket
 import re
 import logging
 import protocol
 
+DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
 # Constants
 WEB_ROOT = "C:/serveriii/webroot"  # Adjust this to your web document root
 DEFAULT_URL = "/index.html"
@@ -118,6 +70,8 @@ def hashing(password):
         type=Type.I  # or Type.ID
     )
     return hash_bytes
+
+
 def get_file_data(file_name):
     """
     Get data from file
@@ -134,35 +88,6 @@ def get_file_data(file_name):
         logging.error("received error: " + str(err))
     finally:
         return data
-
-
-"""
-def db_connection(func, args):
-    res = "False"
-    print(func)
-    try:
-        my_socket = Admin.connect()
-        if func == "up":
-            # add to db the values
-            Admin.signup(my_socket, args[0], args[1])
-            res = Admin.recv(my_socket)
-            print(res)
-            print("up")
-        elif func == "in":
-            Admin.identification(my_socket, args[0], args[1])
-            res = Admin.recv(my_socket)
-            print(res)
-            print("in")
-        else:
-            Admin.send(my_socket, f"{func}+{Admin.SIGN}+{args}")
-            print('else')
-            res = Admin.recv()
-    except Exception as err:
-        print(err)
-    finally:
-        Admin.disconnect(my_socket)
-        return res
-"""
 
 
 def identification_for_admins(name, password):
@@ -222,11 +147,11 @@ def admin_sign_up(name, password):
     print('admins', ans)
     return ans
 
+
 FUNC_DICT = {
     "in": identification_for_admins,
-    "up": admin_sign_up,
-    "pick": "later"
-            }
+    "up": admin_sign_up
+}
 
 
 def handling_req(parts_req):
@@ -496,7 +421,6 @@ def find_username(request):
     return False, None
 
 
-
 def find_info(req):
     pattern = r"\"info\":\"(.*)\""
     m = re.search(pattern, req)
@@ -586,8 +510,6 @@ def handle_client_admin(client_socket):
     client_socket.close()
 
 
-
-
 def get_list(func, id_admin):
     # check port
     cursor = DB.create_cursor()
@@ -601,10 +523,6 @@ def get_list(func, id_admin):
         return None
     cursor.close()
     return msg
-
-
-def ident_client(admins_id):
-    get_list("apps", admins_id)
 
 
 def handle_client_app():
