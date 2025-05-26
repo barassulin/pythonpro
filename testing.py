@@ -1,12 +1,8 @@
-
 """
-HTTP Server Shell
-Author: Barak Gonen and Nir Dweck
-Purpose: Provide a basis for Ex. 4
-Note: The code is written in a simple way, without classes, log files or
-other utilities, for educational purpose
-Usage: Fill the missing functions and constants
-Filled by: Bar Assulin
+    Main Server
+    supports http, other server
+    with access to db
+    Bar Assulin ~ 26/5/2025
 """
 
 import threading
@@ -20,7 +16,8 @@ import socket
 import re
 import logging
 import protocol
-
+import json
+import os
 DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
 # Constants
 WEB_ROOT = "C:/serveriii/webroot"  # Adjust this to your web document root
@@ -44,22 +41,22 @@ REDIRECTION_DICTIONARY = {"/moved": "/"
 # Same parameters across all servers
 
 global android_socket, android_address
-#LOG_FORMAT = '%(levelname)s | %(asctime)s | %(processName)s | %(message)s'
-#LOG_LEVEL = logging.DEBUG
-#LOG_FILE = LOG_DIR + '/server.log'
-#LOG_DIR = 'log'
+# LOG_FORMAT = '%(levelname)s | %(asctime)s | %(processName)s | %(message)s'
+# LOG_LEVEL = logging.DEBUG
+# LOG_FILE = LOG_DIR + '/server.log'
+# LOG_DIR = 'log'
 
-import json, os
 
-apps_list = [
-    {"id": 1, "name": "instagram"},
-    {"id": 5, "name": "chrome"},
-    {"id": 3, "name": "pinterest"},
-    {"id": 9, "name": "spotify"},
-]
+# Example apps list for reference
 
 
 def hashing(password):
+    """
+    Hashes the given password using the Argon2 algorithm.
+
+    :param password: Raw password bytes
+    :return: Hashed password in bytes
+    """
     hash_bytes = hash_secret_raw(
         secret=password,
         salt=SALT,
@@ -74,9 +71,10 @@ def hashing(password):
 
 def get_file_data(file_name):
     """
-    Get data from file
-    :param file_name: the name of the file
-    :return: the file992/ data in a string
+    Reads binary data from a file.
+
+    :param file_name: Name of the file to read
+    :return: File content as bytes, or None if an error occurs
     """
     data = None
     try:
@@ -91,34 +89,46 @@ def get_file_data(file_name):
 
 
 def identification_for_admins(name, password):
+    """
+    Authenticates admin credentials.
+
+    :param name: Admin username
+    :param password: Admin password
+    :return: 'True' if authenticated successfully, 'False' otherwise
+    """
     print("this started now")
     name = str(name)
     worked = 'False'
     cursor = DB.create_cursor()
-    # uuid
-    # ssl
     passi = DB.password_from_db(cursor, 'admins', (name,))
     print(passi)
-    print("passiordi",password)
-    # print("1: ", hashing(b'KP'))
-    # print("1: ", hash('KP'))
-    password_hash_bytes = hashing(password.encode())  # Assuming returns bytes
+    print("passiordi", password)
+
+    password_hash_bytes = hashing(password.encode())
     password_hash_hex = binascii.hexlify(password_hash_bytes).decode()
     password = str(password_hash_hex)
+
     print(password)
     print("pssswo", type(password))
     print("pssi", type(passi))
-    # print("if", password == passi)
 
     if password == passi:
         print("hash worked")
-        # worked = get_list("WORKSPACES", name) # of workspaces
         worked = 'True'
     cursor.close()
     return worked
 
 
 def identification_for_clients(name, password, admins_id, sid):
+    """
+    Authenticates a client and updates their session ID if valid.
+
+    :param name: Client username
+    :param password: Client password
+    :param admins_id: Associated admin ID
+    :param sid: Session ID
+    :return: Tuple (sid, list of apps) if successful, 'False' otherwise
+    """
     name = str(name)
     worked = 'False'
     cursor = DB.create_cursor()
@@ -126,18 +136,25 @@ def identification_for_clients(name, password, admins_id, sid):
 
     passwor = hashing(password.encode())
     password = binascii.hexlify(passwor).decode()
+
     if hashing(password) == passi:
         print("worked")
-
         worked = DB.update_sid(cursor, (sid, name, password))
         if worked:
-            worked = ((sid,), get_list("apps_list", (admins_id,))) # of workspaces
+            worked = ((sid,), get_list("apps_list", (admins_id,)))
     print(worked)
     cursor.close()
     return worked
 
 
 def admin_sign_up(name, password):
+    """
+    Registers a new admin user.
+
+    :param name: Admin username
+    :param password: Admin password
+    :return: Result of the database insertion
+    """
     print("signup")
     cursor = DB.create_cursor()
     print(name, password)
@@ -155,6 +172,13 @@ FUNC_DICT = {
 
 
 def handling_req(parts_req):
+    """
+    Handles a request based on the first element in parts_req.
+
+    :param parts_req: List where the first element is a function key,
+                      followed by its parameters
+    :return: Result of the corresponding function or "None"
+    """
     ans = "None"
     try:
         print("started")
@@ -169,18 +193,20 @@ def handling_req(parts_req):
     return ans
 
 
-
 def add_client(name, passi, username):
+    """
+    Adds a new client user under a specific admin.
+
+    :param name: Client username
+    :param passi: Client hashed password
+    :param username: Admin's username
+    :return: Result of the database insertion or False on failure
+    """
     try:
         cursor = DB.create_cursor()
-        id = DB.get_id(cursor, 'admins', username)[0][0]
-
-        print(name, id)
-
-        # return str(DB.add_to_db(cursor, (name, password), "admins"))
-        m = DB.add_to_db(cursor, (name, passi, id), "clients")
-        # if m is True:
-
+        admins_id = DB.get_id(cursor, 'admins', username)[0][0]
+        print(name, admins_id)
+        m = DB.add_to_db(cursor, (name, passi, admins_id), "clients")
     except Exception as err:
         print(err)
         m = False
@@ -188,28 +214,37 @@ def add_client(name, passi, username):
         return m
 
 
-def update(cursor, id):
+def update(cursor, the_id):
+    """
+    Updates all connected Android clients with the latest list of sids and apps.
+    :param cursor: The database cursor
+    :param the_id: The admin ID as a tuple
+    :return: None
+    """
     print('here')
-    print(id)
-    sids = DB.list_from_db(cursor, 'clients', 'sid', id)
-    apps = DB.list_from_db(cursor, 'apps', 'name', id)
+    print(the_id)
+    sids = DB.list_from_db(cursor, 'clients', 'sid', the_id)
+    apps = DB.list_from_db(cursor, 'apps', 'name', the_id)
     print('sids: ', [sids])
     print('apps: ', [apps])
     protocol.send_protocol([sids, apps], android_socket)
-    # protocol.send_protocol('[sids, apps]', android_socket)
 
 
 def add_app(name, username):
+    """
+    Adds a new app for the specified admin and triggers update.
+    :param name: The app name (in a list)
+    :param username: Admin username
+    :return: True if added successfully, otherwise False
+    """
     try:
         cursor = DB.create_cursor()
-        id = DB.get_id(cursor, 'admins', username)[0][0]
+        admins_id = DB.get_id(cursor, 'admins', username)[0][0]
         name = name[0]
-        print(name, id)
-
-        # return str(DB.add_to_db(cursor, (name, password), "admins"))
-        m = DB.add_to_db(cursor, (name, id), "apps")
+        print(name, admins_id)
+        m = DB.add_to_db(cursor, (name, admins_id), "apps")
         if m:
-            update(cursor, (id,))
+            update(cursor, (admins_id,))
     except Exception as err:
         print(err)
         m = False
@@ -217,14 +252,17 @@ def add_app(name, username):
         return m
 
 
-def remove_app(id):
+def remove_app(the_id):
+    """
+    Removes an app and updates connected clients of the associated admin.
+    :param the_id: Tuple with app ID
+    :return: True if removed successfully, otherwise False
+    """
     try:
-        print(id)
+        print(the_id)
         cursor = DB.create_cursor()
-        # name = DB.get_name(cursor, 'apps', id)[0][0]
-        # return str(DB.add_to_db(cursor, (name, password), "admins"))
-        a_id = DB.get_admins_id(cursor, 'apps', id)[0]
-        m = DB.remove_from_db(cursor, 'apps', id)
+        a_id = DB.get_admins_id(cursor, 'apps', the_id)[0]
+        m = DB.remove_from_db(cursor, 'apps', the_id)
         if m:
             print(a_id)
             update(cursor, a_id)
@@ -237,10 +275,11 @@ def remove_app(id):
 
 def handle_client_request(resource, client_socket, req):
     """
-    Check the required resource, generate proper HTTP response and send
-    to client
-    :param resource: the required resource
-    :param client_socket: a socket for the communication with the client
+    Handle the HTTP client request, map the resource to the appropriate file or action,
+    and send the correct HTTP response.
+    :param resource: the requested URL path
+    :param client_socket: the socket used for the connection
+    :param req: the raw HTTP request string
     :return: None
     """
     print("handling")
@@ -248,12 +287,11 @@ def handle_client_request(resource, client_socket, req):
 
     g, username = find_username(req)
     d, info = find_info(req)
-#    {"id": "4"}
 
     print('g', g)
-
     cursor = DB.create_cursor()
     print('here closed')
+
     if resource == '/':
         uri = DEFAULT_URL
     elif resource == '/home.html':
@@ -262,15 +300,12 @@ def handle_client_request(resource, client_socket, req):
         b, name, passw, func = find_name_pass(req)
         res = handling_req([func, name, passw])
         print("res", res)
-        if b == True and func == "in" and res == 'True':
-            # check in database
+        if b and func == "in" and res == 'True':
             uri = "/home.html"
             print("did got in")
-        elif b == True and func == "up" and res:
-            # enter in database
+        elif b and func == "up" and res:
             print("insert db")
             uri = "/home.html"
-
         else:
             uri = "/incorrect.html"
     elif resource == "/pick":
@@ -280,7 +315,6 @@ def handle_client_request(resource, client_socket, req):
 
         if b and action == 'clients':
             uri = "/clients.html"
-
         elif b and action == 'apps':
             uri = "/apps.html"
         else:
@@ -290,7 +324,7 @@ def handle_client_request(resource, client_socket, req):
         uri = 'app_list.js'
     elif resource == '/add-app':
         print('name', info)
-        print (' here')
+        print(' here')
         if add_app(info, username):
             uri = "/apps.html"
         else:
@@ -325,49 +359,47 @@ def handle_client_request(resource, client_socket, req):
         cursor.close()
     else:
         uri = DEFAULT_URL
+
     http_response = "HTTP/1.1 404 Not Found\r\nContent-Length: 0\r\n\r\n"
     http_response = http_response.encode()
+
     if uri in REDIRECTION_DICTIONARY:
         uri = REDIRECTION_DICTIONARY[uri]
         http_response = f"HTTP/1.1 302 Found\r\nLocation: {uri}\r\n\r\n".encode()
     if uri == "/forbidden":
         print('forbidden')
-        http_response = "HTTP/1.1 403 forbidden\r\nContent-Length: 0\r\n\r\n"
-        http_response = http_response.encode()
+        http_response = "HTTP/1.1 403 forbidden\r\nContent-Length: 0\r\n\r\n".encode()
     elif uri == "/error":
-        http_response = "HTTP/1.1 500 ERROR SERVER INTERNAL\r\nContent-Length: 0\r\n\r\n"
-        http_response = http_response.encode()
-
+        http_response = "HTTP/1.1 500 ERROR SERVER INTERNAL\r\nContent-Length: 0\r\n\r\n".encode()
     else:
         print("uri", uri)
         file_type = uri.split(".")[-1]
 
-        if (file_type == "html" or file_type == "jpg" or file_type == "gif" or file_type == "css" or file_type == "js"
-                or file_type == "txt" or file_type == "ico" or file_type == "png"):
+        if file_type in ["html", "jpg", "gif", "css", "js", "txt", "ico", "png"]:
             print('f', file_type)
-            if uri == 'app_list.js' and g == True:
+            if uri == 'app_list.js' and g:
                 print('got')
                 cursor = DB.create_cursor()
-                id = DB.get_id(cursor,'admins', username)
-                print(id)
-                listi = DB.list_from_db(cursor, 'apps', 'name', id[0])
+                admins_id = DB.get_id(cursor, 'admins', username)
+                print(admins_id)
+                listi = DB.list_from_db(cursor, 'apps', 'name', admins_id[0])
                 print(listi)
                 data = json.dumps(DB.list_to_list(cursor, listi, 'apps')).encode()
                 cursor.close()
                 print(data)
-            elif uri == 'client_list.js' and g == True:
+            elif uri == 'client_list.js' and g:
                 print('got')
                 cursor = DB.create_cursor()
-                id = DB.get_id(cursor,'admins', username)
-                print(id)
-                listi = DB.list_from_db(cursor, 'clients', 'name', id[0])
+                clients_id = DB.get_id(cursor, 'admins', username)
+                print(clients_id)
+                listi = DB.list_from_db(cursor, 'clients', 'name', clients_id[0])
                 print(listi)
                 data = json.dumps(DB.list_to_list(cursor, listi, 'clients')).encode()
                 cursor.close()
                 print(data)
             else:
                 try:
-                    data = get_file_data(uri) # DEFAULT_URL.encode()
+                    data = get_file_data(uri)
                     print("data: ", data)
                 except Exception as err:
                     print(err)
@@ -381,8 +413,8 @@ def handle_client_request(resource, client_socket, req):
             elif file_type == "css":
                 http_header = f"HTTP/1.1 200 OK\r\nContent-Type: text/css\r\nContent-Length: {leng}\r\n\r\n"
             elif file_type == "js":
-                http_header = (f"HTTP/1.1 200 OK\r\nContent-Type: text/javascript;charset=UTF-8\r\nContent-Length: "
-                               f"{leng}\r\n\r\n")
+                http_header = (f"HTTP/1.1 200 OK\r\nContent-Type: text/javascript;charset=UTF-8\r\n"
+                               f"Content-Length: {leng}\r\n\r\n")
             elif file_type == "txt":
                 http_header = f"HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\nContent-Length: {leng}\r\n\r\n"
             elif file_type == "ico":
@@ -398,8 +430,12 @@ def handle_client_request(resource, client_socket, req):
 
 
 def find_name_pass(request):
-    # username=a&password=1234&action=signin
+    """
+    Extract username, password, and action (sign in/up) from the request string.
 
+    :param request: HTTP request string
+    :return: Tuple (True/False, username, password, action) or (False, None, None, None)
+    """
     pattern = r"username=(.*)&password=(.*)&action=sign(.*)"
     m = re.search(pattern, request)
     if m:
@@ -410,7 +446,12 @@ def find_name_pass(request):
 
 
 def find_username(request):
+    """
+    Extract username from JSON-style string in the request.
 
+    :param request: HTTP request string
+    :return: Tuple (True/False, username) or (False, None)
+    """
     pattern = r"{\"username\":\"(.*?)\""
     m = re.search(pattern, request)
     if m:
@@ -422,6 +463,12 @@ def find_username(request):
 
 
 def find_info(req):
+    """
+    Extract 'info' field from JSON-style request string.
+
+    :param req: HTTP request string
+    :return: Tuple (True/False, info value) or (False, None)
+    """
     pattern = r"\"info\":\"(.*)\""
     m = re.search(pattern, req)
     if m:
@@ -430,8 +477,15 @@ def find_info(req):
         return True, name
 
     return False, None
+
+
 def find_action(request):
-    # username=a&password=1234&action=signin
+    """
+    Extract 'action' field from a URL-encoded query string.
+
+    :param request: HTTP request string
+    :return: Tuple (True/False, action value) or (False, None)
+    """
     pattern = r"action=(.*)"
     m = re.search(pattern, request)
     if m:
@@ -444,11 +498,10 @@ def find_action(request):
 
 def validate_http_request(request):
     """
-    Check if request is a valid HTTP request and returns TRUE / FALSE and
-    the requested URL
-    :param request: the request which was received from the client
-    :return: a tuple of (True/False - depending if the request is valid,
-    the requested resource )
+    Validate HTTP request and extract the requested resource path.
+
+    :param request: HTTP request string
+    :return: Tuple (True/False, requested resource) or (False, None)
     """
     patterns = [
         r"^GET (.*) HTTP/1\.\d",
@@ -466,10 +519,8 @@ def validate_http_request(request):
 
 def handle_client_admin(client_socket):
     """
-    Handles client requests: verifies client's requests are legal HTTP, calls
-    function to handle the requests
-    :param client_socket: the socket for the communication with the client
-    :return: None
+    Handles admin HTTP client requests.
+    Parses and verifies the HTTP request and delegates it to the appropriate handler.
     """
     print('Client connected')
     while True:
@@ -477,41 +528,47 @@ def handle_client_admin(client_socket):
             print("ok1")
             print(client_socket)
             client_request = client_socket.recv(1024).decode()
+
             while '\r\n\r\n' not in client_request:
                 cb = client_socket.recv(1)
                 if cb == b'':
-                    print('socket disconnected')
-                    # client_socket.close()
-                client_request = client_request + cb.decode()
+                    print('Socket disconnected')
+                    break
+                client_request += cb.decode()
                 print('trying')
 
-            logging.debug("getting client request " + client_request)
+            logging.debug("Getting client request: " + client_request)
             print(client_request)
+
             valid_http, resource = validate_http_request(client_request)
             print("r: ", resource)
+
+            # Forced to True for now; remove in production
             valid_http = True
+
             if valid_http:
-                print(resource)
-                print('Got a valid HTTP request')
-                print("start     ", client_request, "    end")
+                print('Got a valid HTTP request:', resource)
+                print("Request content:\n", client_request)
                 handle_client_request(resource, client_socket, client_request)
             else:
-                http_header = "HTTP/1.1 400 Request Bad\r\n\r\n"
+                http_header = "HTTP/1.1 400 Bad Request\r\n\r\n"
                 client_socket.send(http_header.encode())
-                logging.debug("sending response" + http_header)
+                logging.debug("Sending response: " + http_header)
                 print('Error: Not a valid HTTP request')
                 break
-        except Exception as err:  # Catch any unexpected errors
-            #logging.error("Error handling client request: " + str(err))
-            print(err)
-            break  # Close the connection to prevent further issues
+
+        except Exception as err:
+            print('Exception:', err)
+            break
 
     print('Closing connection')
     client_socket.close()
 
 
 def get_list(func, id_admin):
-    # check port
+    """
+    Retrieve a list (apps, clients, or sids) from the DB based on admin request.
+    """
     cursor = DB.create_cursor()
     if func == 'apps_list':
         msg = DB.list_from_db(cursor, 'apps', 'name', id_admin)
@@ -520,126 +577,124 @@ def get_list(func, id_admin):
     elif func == 'sids_list':
         msg = DB.list_from_db(cursor, 'clients', 'sid', id_admin)
     else:
+        cursor.close()
         return None
+
     cursor.close()
     return msg
 
 
 def handle_client_app():
+    """
+    Handles communication with a connected Android app.
+    """
     msg = protocol.recv_protocol(android_socket)
     print(msg.split())
+
     func = msg.split()[0]
     if func == "client_idedtify":
         name = msg.split()[1]
         passi = msg.split()[2]
         ws_pass = msg.split()[3]
         sid = msg.split()[4]
+
         worked = identification_for_clients(name, passi, ws_pass, sid)
         protocol.send_protocol(worked, android_socket)
     else:
         protocol.send_protocol("False", android_socket)
 
 
-def connections_admin(socket):
-    """Accept connections from clients."""
+def connections_admin(mysocket):
+    """
+    Accept SSL admin connections and start a thread to handle each.
+    """
     while True:
         try:
-            print("tryong")
-            client_socket, client_address = socket.accept()
+            print("Waiting for admin...")
+            client_socket, client_address = mysocket.accept()
+            print('New connection from', client_address, PORT)
 
+            mysocket.settimeout(SOCKET_TIMEOUT)
 
-
-            print('New connection received from', client_address, PORT)
-
-            socket.settimeout(SOCKET_TIMEOUT)
             server_thread = threading.Thread(
                 target=handle_client_admin,
                 args=(client_socket,),
+                daemon=True
             )
-            server_thread.daemon = True
             server_thread.start()
         except Exception as err:
-
-            print(err)
-            # break
+            print("Admin connection error:", err)
 
 
 def connections_apps(c_socket):
+    """
+    Accept SSL Android client connection and handle it.
+    """
+    global android_socket, android_address
     try:
-        """Accept connections from clients."""
-        global android_socket, android_address
         android_socket, android_address = c_socket.accept()
-
-        print('New connection received from', android_address, SERVER_PORT)
-
-        # client_socket.settimeout(SOCKET_TIMEOUT)
+        print('New Android connection from', android_address, SERVER_PORT)
         handle_client_app()
     except Exception as err:
-        print(err)
+        print("App connection error:", err)
 
 
 def main():
+    """
+    Main server loop. Initializes SSL sockets and spawns listener threads.
+    """
     my_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     my_server_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
     a_context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
-    a_context.load_cert_chain(CERT_FILE, KEY_FILE)
-    context.load_cert_chain(CERT_FILE, KEY_FILE)
 
-    # context.check_hostname=False
-    # context.verify_mode = ssl.CERT_NONE
+    context.load_cert_chain(CERT_FILE, KEY_FILE)
+    a_context.load_cert_chain(CERT_FILE, KEY_FILE)
 
     try:
-
+        # Admin socket setup
         my_sock.bind((IP, PORT))
         my_sock.listen(QUEUE_LEN)
+        print(f"Listening for admin connections on port {PORT}")
 
-
-        print(f"Listening for connections on port {PORT}")
-
+        # Android socket setup
         my_server_sock.bind((IP, SERVER_PORT))
         my_server_sock.listen(QUEUE_LEN)
+        print(f"Listening for app connections on port {SERVER_PORT}")
 
-        print(f"Listening for connections on port {SERVER_PORT}")
-
-        # Wrap the socket
-#         server_thread = threading.Thread(target=handle_client_admin, args=(my_socket,))
+        # SSL wrapping
         ssl_socket = context.wrap_socket(my_sock, server_side=True)
-
-        server_thread = threading.Thread(target=connections_admin, args=(ssl_socket,))
-        server_thread.daemon = True
-        server_thread.start()
-
-
         android_sock = a_context.wrap_socket(my_server_sock, server_side=True)
-        # Handle client connections in a thread
-        try:
-            client_thread = threading.Thread(target=connections_apps, args=(android_sock,))
-            client_thread.daemon = True
-            client_thread.start()
-        except Exception as err:
-            print('err2 ', err)
+
+        # Start admin thread
+        admin_thread = threading.Thread(target=connections_admin, args=(ssl_socket,), daemon=True)
+        admin_thread.start()
+
+        # Start app thread
+        client_thread = threading.Thread(target=connections_apps, args=(android_sock,), daemon=True)
+        client_thread.start()
+
+        # Keep main thread alive
         while True:
             pass
+
     except socket.error as err:
-        logging.error("server socket error: " + str(err))
-        print('Server socket exception:', err)
+        logging.error("Server socket error: " + str(err))
+        print('Socket error:', err)
     except Exception as err:
-        print('err ',err)
+        print('General server error:', err)
     finally:
         my_sock.close()
         my_server_sock.close()
 
 
-
 if __name__ == "__main__":
-    # logging.basicConfig(format=LOG_FORMAT, filename=LOG_FILE, level=LOG_LEVEL)
-
+    # Tests
     valid_request = "GET /admin_website.html HTTP/1.1"
     assert validate_http_request(valid_request) == (True, "/admin_website.html")
 
     invalid_request = "INVALID_REQUEST"
     assert validate_http_request(invalid_request) == (False, None)
-    # Call the main handler function
+
     main()
