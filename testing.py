@@ -7,7 +7,6 @@
 
 import threading
 import ssl
-import Admin
 import database
 # import hashlib
 from argon2.low_level import hash_secret_raw, Type
@@ -17,8 +16,6 @@ import re
 import logging
 import protocol
 import json
-import os
-DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
 # Constants
 WEB_ROOT = "C:/serveriii/webroot"  # Adjust this to your web document root
 DEFAULT_URL = "/index.html"
@@ -202,6 +199,7 @@ def add_client(name, passi, username):
     :param username: Admin's username
     :return: Result of the database insertion or False on failure
     """
+
     try:
         cursor = DB.create_cursor()
         admins_id = DB.get_id(cursor, 'admins', username)[0][0]
