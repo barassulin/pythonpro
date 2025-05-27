@@ -1,5 +1,11 @@
+"""
+Bar Assulin ~ 27/5/25
+for checking
+"""
+
 from http.server import HTTPServer, BaseHTTPRequestHandler
-import json, os
+import json
+import os
 
 apps_list = [
     {"id": 1, "name": "instagram"},
@@ -42,6 +48,7 @@ class SimpleHandler(BaseHTTPRequestHandler):
     def do_POST(self):
         # (Your remove/add handlers go here…)
         self.send_error(404, "Not Found")
+
 
 if __name__ == '__main__':
     HTTPServer(('localhost', 8000), SimpleHandler).serve_forever()

@@ -209,7 +209,7 @@ class Database:
         - True if update succeeded, False otherwise.
         """
         try:
-#            values = (values[0], values[1], hash(values[2]))
+            #            values = (values[0], values[1], hash(values[2]))
             sql = "UPDATE clients SET sid=%s WHERE name=%s and c_password=%s"
             cursor.execute(sql, values)
             self.connection.commit()

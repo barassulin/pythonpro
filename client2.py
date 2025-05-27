@@ -1,3 +1,8 @@
+"""
+client demo
+Bar Assulin ~ 27/5/25
+"""
+
 import socket
 
 SERVER_IP = '127.0.0.1'

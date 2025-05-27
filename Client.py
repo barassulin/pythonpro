@@ -1,7 +1,6 @@
-# for exampple
 """
-shapes - by Bar Assulin
-Date: 13/9/24
+client demo
+Bar Assulin ~ 27/5/25
 """
 
 import socketio
@@ -11,25 +10,34 @@ SERVER_PORT = 20004
 sio = socketio.Client()
 
 # Event: when connected
+
+
 @sio.event
 def connect():
     print("✅ Connected to the server")
     sio.emit("message", "Hello from Python client!")
 
 # Event: response from server
+
+
 @sio.event
 def response(data):
     print("📥 Response from server:", data)
 
 # Event: generic message
+
+
 @sio.event
 def message(data):
     print("📨 Message received:", data)
 
 # Event: when disconnected
+
+
 @sio.event
 def disconnect():
     print("❌ Disconnected from server")
+
 
 # Connect to the Socket.IO server
 try:
