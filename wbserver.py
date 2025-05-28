@@ -301,7 +301,7 @@ def handle_client_request(resource, client_socket, req):
         if b and func == "in" and res == 'True':
             uri = "/home.html"
             print("did got in")
-        elif b and func == "up" and res:
+        elif b and func == "up" and res == 'True':
             print("insert db")
             uri = "/home.html"
         else:
@@ -585,6 +585,7 @@ def get_list(func, id_admin):
 def handle_client_app():
     """
     Handles communication with a connected Android app.
+    ws_pass = admins_id
     """
     msg = protocol.recv_protocol(android_socket)
     print(msg.split())
