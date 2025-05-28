@@ -4,8 +4,6 @@
 """
 
 
-import time
-import database
 import socket
 import threading
 import socketio
@@ -45,7 +43,6 @@ SERVER_IP = '0.0.0.0'
 SERVER_PORT = 20003
 CLIENTS_PORT = 20004
 LISTEN_SIZE = 1
-DB = database.Database('127.0.0.1', 'root', 'Zaq1@wsx', 'bar')
 
 sio = socketio.AsyncServer()
 my_socket = connect()
@@ -54,21 +51,10 @@ sio.attach(app)
 
 
 @sio.event
-async def update(sid, listi):
-    """Send an update event to a client."""
-    print("updating")
-    try:
-        print(listi)
-        await sio.emit("update", listi, room=sid)
-    except Exception as err:
-        print(err)
-
-
-@sio.event
 async def connect(sid, environ):
     """Handle new client connection."""
     print(f"{sid} connected")
-    time.sleep(1)
+    # time.sleep(1)
 
 
 @sio.event

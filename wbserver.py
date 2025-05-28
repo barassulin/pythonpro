@@ -128,13 +128,15 @@ def identification_for_clients(name, password, admins_id, sid):
     """
     name = str(name)
     worked = 'False'
+    print('namamamamm')
     cursor = DB.create_cursor()
     passi = DB.password_from_db(cursor, 'clients', (name, admins_id))
-
+    print("hate cyber")
     passwor = hashing(password.encode())
     password = binascii.hexlify(passwor).decode()
-
-    if hashing(password) == passi:
+    print(password)
+    print(passi)
+    if password == passi:
         print("worked")
         worked = DB.update_sid(cursor, (sid, name, password))
         if worked:
@@ -204,6 +206,8 @@ def add_client(name, passi, username):
         cursor = DB.create_cursor()
         admins_id = DB.get_id(cursor, 'admins', username)[0][0]
         print(name, admins_id)
+        passi = hashing(passi.encode())
+        passi = binascii.hexlify(passi).decode()
         m = DB.add_to_db(cursor, (name, passi, admins_id), "clients")
     except Exception as err:
         print(err)
@@ -592,11 +596,12 @@ def handle_client_app():
 
     func = msg.split()[0]
     if func == "client_idedtify":
+        print('great!')
         name = msg.split()[1]
         passi = msg.split()[2]
         ws_pass = msg.split()[3]
         sid = msg.split()[4]
-
+        print('so far so good')
         worked = identification_for_clients(name, passi, ws_pass, sid)
         protocol.send_protocol(worked, android_socket)
     else:
