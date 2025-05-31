@@ -246,6 +246,7 @@ def add_app(name, username):
         print(name, admins_id)
         m = DB.add_to_db(cursor, (name, admins_id), "apps")
         if m:
+
             update(cursor, (admins_id,))
     except Exception as err:
         print(err)
@@ -353,8 +354,10 @@ def handle_client_request(resource, client_socket, req):
         print('remove')
         print(info)
         info = (int(info[0]),)
-        print(info)
+        sid = DB.get_sid(cursor, info)
+        print("info ", info, "sid ", sid)
         if DB.remove_from_db(cursor, 'clients', info):
+            protocol.send_protocol([sid, 'disco'], android_socket)
             uri = "/clients.html"
         else:
             uri = "/incorrect.html"

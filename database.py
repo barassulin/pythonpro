@@ -151,6 +151,21 @@ class Database:
         cursor.execute(sql, value)
         return cursor.fetchall()
 
+    def get_sid(self, cursor, value):
+        """
+        Retrieves the sid associated with a record.
+
+        Parameters:
+        - cursor: Prepared MySQL cursor.
+        - value (tuple): ID value.
+
+        Returns:
+        - List of tuples containing the sid.
+        """
+        sql = f"SELECT sid FROM clients WHERE id=%s"
+        cursor.execute(sql, value)
+        return cursor.fetchall()
+
     def list_from_db(self, cursor, table_name, row, value):
         """
         Returns a list of items (name or sid) from a table based on admins_id.

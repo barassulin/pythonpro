@@ -14,6 +14,8 @@ import ssl
 
 CERT_FILE = 'certificate.crt'
 
+SERVER_IP_CONNECT = '127.0.0.1'
+SERVER_PORT_CONNECT = 20003
 
 def connect():
     """Establish a secure SSL connection to the server."""
@@ -37,8 +39,6 @@ def disconnect(client_socket):
     client_socket.close()
 
 
-SERVER_IP_CONNECT = '127.0.0.1'
-SERVER_PORT_CONNECT = 20003
 SERVER_IP = '0.0.0.0'
 SERVER_PORT = 20003
 CLIENTS_PORT = 20004
@@ -79,8 +79,9 @@ async def recv_res():
         ans = res[1]
 
         for sid in sids:
-            if ans == "False":
-                await disconnect(sid)
+            if ans == "False" or ans == 'disco':
+                print('disco')
+                await sio.disconnect(sid)
             else:
                 print(sid)
                 print(ans)
