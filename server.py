@@ -81,6 +81,8 @@ async def recv_res():
         for sid in sids:
             if ans == "False" or ans == 'disco':
                 print('disco')
+                if ans == 'disco':
+                    await sio.emit("update", [], room=sid)
                 await sio.disconnect(sid)
             else:
                 print(sid)
