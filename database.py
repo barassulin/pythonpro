@@ -92,7 +92,7 @@ class Database:
         - value (tuple): The WHERE clause parameters.
 
         Returns:
-        - Password value (usually hashed).
+        - Password value (hashed).
         """
         sqls = ''
         if table_name == 'admins':
@@ -101,7 +101,9 @@ class Database:
             sqls = "SELECT c_password FROM clients WHERE name=%s and admins_id=%s"
         cursor.execute(sqls, value)
         result = cursor.fetchall()
-        return result[0][0]
+        print('this worked')
+        print(result)
+        return result
 
     def get_id(self, cursor, table, value):
         """

@@ -77,7 +77,6 @@ async def recv_res():
         print(res)
         sids = res[0]
         ans = res[1]
-
         for sid in sids:
             if ans == "False" or ans == 'disco':
                 print('disco')
