@@ -99,8 +99,8 @@ def identification_for_admins(name, password):
     worked = 'False'
     cursor = DB.create_cursor()
     passi = DB.password_from_db(cursor, 'admins', (name,))
-    if passi is not []:
-        passi==passi[0][0]
+    if passi[0] is not None:
+        passi=passi[0][0]
     print("passiordi", password)
 
     password_hash_bytes = hashing(password.encode())
@@ -129,12 +129,13 @@ def identification_for_clients(name, password, admins_id, sid):
     :return: Tuple (sid, list of apps) if successful, 'False' otherwise
     """
     name = str(name)
-    worked = ((sid,),'False')
+    worked = ((sid,), 'False')
     print('namamamamm')
     cursor = DB.create_cursor()
     passi = DB.password_from_db(cursor, 'clients', (name, admins_id))
-    if passi is not []:
-        passi == passi[0][0]
+    if passi[0] is not None:
+        passi = passi[0][0]
+    print(passi)
     print("hate cyber")
     passwor = hashing(password.encode())
     password = binascii.hexlify(passwor).decode()
