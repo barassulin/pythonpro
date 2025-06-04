@@ -8,7 +8,6 @@
 import threading
 import ssl
 import database
-# import hashlib
 from argon2.low_level import hash_secret_raw, Type
 import binascii
 import socket
@@ -136,9 +135,6 @@ def identification_for_clients(name, password, admins_id, sid):
     if passi[0] is not None:
         passi = passi[0][0]
     print(passi)
-    print("hate cyber")
-    passwor = hashing(password.encode())
-    password = binascii.hexlify(passwor).decode()
     print(password)
     print(passi)
     if password == passi:

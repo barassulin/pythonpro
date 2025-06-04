@@ -2,8 +2,8 @@
     Bar Assulin ~ 25/5/2025
     server for android phones
 """
-
-
+import binascii
+from argon2.low_level import hash_secret_raw, Type
 import socket
 import threading
 import socketio
@@ -16,6 +16,27 @@ CERT_FILE = 'certificate.crt'
 
 SERVER_IP_CONNECT = '127.0.0.1'
 SERVER_PORT_CONNECT = 20003
+SALT = b"fixedsalt123456"  # 16 bytes for Argon2 salt
+
+
+def hashing(password):
+    """
+    Hashes the given password using the Argon2 algorithm.
+
+    :param password: Raw password bytes
+    :return: Hashed password in bytes
+    """
+    hash_bytes = hash_secret_raw(
+        secret=password,
+        salt=SALT,
+        time_cost=2,
+        memory_cost=102400,
+        parallelism=8,
+        hash_len=32,
+        type=Type.I  # or Type.ID
+    )
+    return hash_bytes
+
 
 def connect():
     """Establish a secure SSL connection to the server."""
@@ -61,7 +82,12 @@ async def connect(sid, environ):
 async def identify(sid, data):
     """Handle client identification."""
     print(f"Got: {data}")
-    protocol.send_protocol(f"client_idedtify {data.lower()} {sid}", my_socket)
+    name = data.lower().split()[0]
+    passi = data.lower().split()[1]
+    passi = hashing(passi.encode())
+    passi = binascii.hexlify(passi).decode()
+    ws_pass = data.lower().split()[2]
+    protocol.send_protocol(f"client_idedtify {name} {passi} {ws_pass} {sid}", my_socket)
 
 
 @sio.event
