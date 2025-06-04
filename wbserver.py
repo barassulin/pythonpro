@@ -122,7 +122,7 @@ def identification_for_clients(name, password, admins_id, sid):
     Authenticates a client and updates their session ID if valid.
 
     :param name: Client username
-    :param password: Client password
+    :param password: Client hashed password
     :param admins_id: Associated admin ID
     :param sid: Session ID
     :return: Tuple (sid, list of apps) if successful, 'False' otherwise
